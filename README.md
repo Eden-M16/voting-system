@@ -1,10 +1,10 @@
-🗳️ VoteChain - Blockchain Voting System
+# 🗳️ VoteChain - Advanced Blockchain Voting System
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Solidity](https://img.shields.io/badge/Solidity-0.8.30-363636)](https://soliditylang.org/)
 [![Network](https://img.shields.io/badge/Network-Sepolia-3b82f6)](https://sepolia.etherscan.io/)
 [![Live Demo](https://img.shields.io/badge/Live-Demo-10b981)](https://eden-m16.github.io/voting-system/voting-app.html)
-[![Contract](https://img.shields.io/badge/Contract-Verified-8b5cf6)](https://testnet.routescan.io/address/0x13100E329e5916aEd38457797cBa5d49A2F87ADD)
+[![Contract](https://img.shields.io/badge/Contract-Verified-8b5cf6)](https://testnet.routescan.io/address/0x230c92eAFf052d656f245d99C42B39D696AC84d2)
 
 **Live Demo**: [https://eden-m16.github.io/voting-system/voting-app.html](https://eden-m16.github.io/voting-system/voting-app.html)
 
@@ -13,160 +13,133 @@
 ## 📋 Table of Contents
 
 - [Overview](#overview)
+- [New Features](#-new-features-v20)
 - [Features](#features)
-- [Architecture](#architecture)
 - [Smart Contract](#smart-contract)
-- [Frontend](#frontend)
 - [Quick Start](#quick-start)
 - [Usage Guide](#usage-guide)
+- [Admin Guide](#admin-guide)
 - [Deployment](#deployment)
-- [Limitations](#limitations)
-- [Tech Stack](#tech-stack)
 - [License](#license)
 
 ---
 
 ## Overview
 
-VoteChain is a complete decentralized voting application where every vote is permanently recorded on the Ethereum blockchain.
+VoteChain is an advanced decentralized voting application with **weighted voting**, **voter registration**, and **full admin controls**. Every vote is permanently recorded on the Ethereum blockchain.
 
-**What it does:**
-- Admins create elections with title, duration, and candidates
-- Voters cast votes using MetaMask
-- Results are visible instantly and cannot be changed
-
-**Where it runs:**
-- Smart Contract: Sepolia Testnet
-- Frontend: GitHub Pages
-- Blockchain: Ethereum Sepolia
+**What's New in v2.0:**
+- ✅ **Weighted Voting** - Different voters can have different vote weights
+- ✅ **Voter Registration** - Only registered voters can participate
+- ✅ **Election Controls** - Pause, unpause, extend, or end elections
+- ✅ **Candidate Descriptions** - Add detailed info for each candidate
+- ✅ **Winner Announcement** - Automatic winner calculation
 
 ---
 
-## Features
+## ✨ New Features (v2.0)
 
-### Core Features
-- Create elections with multiple candidates
-- Cast votes with MetaMask
-- Prevent double voting (one wallet = one vote)
-- Time-locked elections with automatic end
-- Real-time vote counting
-- Winner announcement after election ends
-
-### User Experience
-- One-click wallet connection
-- Network detection (automatically checks for Sepolia)
-- Statistics dashboard showing elections and votes
-- Progress bars for vote distribution
-- Toast notifications for transaction feedback
-- Responsive design for mobile and desktop
-- Admin panel only visible to contract owner
-
-### Security
-- Votes cannot be modified after casting
-- Anyone can verify results on block explorer
-- Only contract owner can create/end elections
-- Block timestamp ensures timing accuracy
-
----
-
+| Feature | Description |
+|---------|-------------|
+| **Weighted Voting** | Give different weights to voters (e.g., 1 vote, 2 votes, 5 votes) |
+| **Voter Registration** | Admin registers voters before election starts |
+| **Pause Election** | Temporarily stop voting in case of issues |
+| **Extend Election** | Add more time to an active election |
+| **Candidate Descriptions** | Each candidate can have a description/party/platform |
+| **Registration Check** | Voters see if they're registered |
+| **Winner Display** | Automatic winner calculation after election ends |
 
 ---
 
 ## Smart Contract
 
-**Contract Address:** `0x13100E329e5916aEd38457797cBa5d49A2F87ADD`
+**Contract Address:** `0x230c92eAFf052d656f245d99C42B39D696AC84d2`
 
 **Network:** Sepolia Testnet
 
 **Compiler:** v0.8.30
 
-**Status:** Verified on Sourcify and Routescan
+### Key Functions
 
-### Functions
-
-| Function | Who | What it does |
-|----------|-----|--------------|
-| `createElection()` | Admin | Creates new election with candidates |
-| `vote()` | Anyone | Casts a vote |
-| `endElection()` | Admin | Ends election early |
-| `getElectionInfo()` | Anyone | Returns election details |
-| `getCandidate()` | Anyone | Returns candidate info |
-| `hasVoted()` | Anyone | Checks if address voted |
-| `electionId()` | Anyone | Returns total elections count |
-| `owner()` | Anyone | Returns contract owner |
-
-### Verification Links
-
-- [Routescan Explorer](https://testnet.routescan.io/address/0x13100E329e5916aEd38457797cBa5d49A2F87ADD)
-- [Sourcify](https://repo.sourcify.dev/11155111/0x13100E329e5916aEd38457797cBa5d49A2F87ADD/)
-
----
-
-## Frontend
-
-### Design
-- Trust Blue (#0A2472) for security
-- Democracy Gold (#FFD966) for highlights
-- Clean white cards with shadows
-- Responsive for all devices
-
-### Components
-- Statistics cards (elections, votes, role)
-- Tab navigation (Active/Ended/Admin)
-- Election cards with status badges
-- Candidate items with vote buttons
-- Progress bars for vote percentages
-- Confirmation modal before voting
-- Toast notifications for feedback
+| Function | Who | Description |
+|----------|-----|-------------|
+| `createElection()` | Admin | Create election with candidates and descriptions |
+| `registerVoters()` | Admin | Register voters with weights |
+| `vote()` | Registered Voter | Cast vote (counts with weight) |
+| `pauseElection()` | Admin | Temporarily pause voting |
+| `unpauseElection()` | Admin | Resume voting |
+| `extendElection()` | Admin | Add more time |
+| `endElection()` | Admin | End election early |
+| `getElectionWinner()` | Anyone | Get winner after election ends |
 
 ---
 
 ## Quick Start
 
 ### 1. Install MetaMask
-- Download from [metamask.io](https://metamask.io/)
-- Create or import wallet
+Download from [metamask.io](https://metamask.io/)
 
 ### 2. Add Sepolia Network
-Network Name: Sepolia Testnet
+Network: Sepolia Testnet
 RPC URL: https://rpc.sepolia.org
 Chain ID: 11155111
-Currency: SepoliaETH
 
 ### 3. Get Test ETH
-- Go to [Sepolia Faucet](https://sepolia-faucet.pk910.de/)
-- Enter your wallet address
-- Wait for ETH to arrive
+Visit [Sepolia Faucet](https://sepolia-faucet.pk910.de/)
 
 ### 4. Open the App
-- Go to: https://eden-m16.github.io/voting-system/voting-app.html
-- Click "Connect Wallet"
-- Approve connection
+[https://eden-m16.github.io/voting-system/voting-app.html](https://eden-m16.github.io/voting-system/voting-app.html)
 
 ---
 
 ## Usage Guide
 
-### For Admin (Contract Owner)
-
-1. Connect wallet
-2. Click "Admin Panel" tab
-3. Fill election details:
-   - Title (e.g., "Presidential Election 2026")
-   - Duration in minutes (1440 = 24 hours)
-   - Candidate names (add at least 2)
-4. Click "Create Election"
-5. Confirm transaction in MetaMask
-6. Wait for confirmation
-
 ### For Voters
 
-1. Connect wallet
-2. Browse "Active Elections" tab
-3. Click "Vote" on your candidate
-4. Confirm in the modal
-5. Confirm transaction in MetaMask
-6. Results update automatically
+1. Connect wallet (must be registered by admin)
+2. Browse active elections
+3. Click "Vote" on your chosen candidate
+4. Confirm transaction
+5. View results in real-time
+
+### For Admin (Contract Owner)
+
+1. **Create Election** - Add title, description, duration, candidates
+2. **Register Voters** - Add wallet addresses with weights (1-10)
+3. **Control Election** - Pause, extend, or end as needed
+4. **View Results** - Winner displayed automatically
+
+---
+
+## Admin Guide
+
+### Creating an Election
+Title: "Presidential Election 2026"
+Description: "Vote for the next president"
+Duration: 1440 minutes (24 hours)
+Candidates:
+
+Alice Johnson | Progressive Party candidate
+
+Bob Smith | Unity Party candidate
+
+### Registering Voters
+Election ID: 0
+Voters:
+
+0x123... | Weight: 1
+
+0x456... | Weight: 2
+
+0x789... | Weight: 5
+
+### Election Controls
+| Action | When to Use |
+|--------|-------------|
+| **Pause** | Issue detected, need to investigate |
+| **Unpause** | Issue resolved, resume voting |
+| **Extend** | More time needed for voting |
+| **End** | Election completed early |
 
 ---
 
@@ -175,57 +148,19 @@ Currency: SepoliaETH
 ### Deploy Your Own Contract
 
 1. Open [Remix](https://remix.ethereum.org/)
-2. Create `voting.sol` and paste contract code
-3. Compile with Solidity 0.8.30 (optimization on, 200 runs)
-4. Disable "Generate Metadata" in Advanced Configurations
-5. Set Environment to "Injected Provider - MetaMask"
-6. Ensure you're on Sepolia network
-7. Click "Deploy"
-8. Copy the new contract address
-9. Update `CONTRACT_ADDRESS` in `voting-app.html`
-
-### Deploy Frontend to GitHub Pages
-
-1. Push updated `voting-app.html` to GitHub
-2. Go to Settings → Pages
-3. Select "main" branch as source
-4. Save and wait 1-2 minutes
-5. Access at `https://[username].github.io/[repo]/voting-app.html`
-
----
-
-## Limitations
-
-| Limitation | Explanation |
-|------------|-------------|
-| No voter registration | Anyone with a wallet can vote |
-| Gas costs | Users need ETH to vote |
-| Public vote counts | Results visible during voting |
-| Testnet only | Not deployed on mainnet |
-| No privacy | Wallet addresses are visible |
-
-These exist because this is a learning project. Real elections would need identity verification and privacy features.
-
----
-
-## Tech Stack
-
-| Category | Technology |
-|----------|------------|
-| Blockchain | Ethereum Sepolia |
-| Smart Contract | Solidity 0.8.30 |
-| Development | Remix IDE |
-| Frontend | HTML5/CSS3/JavaScript |
-| Web3 Library | ethers.js |
-| Wallet | MetaMask |
-| Hosting | GitHub Pages |
+2. Create `voting.sol` with the advanced contract
+3. Compile with Solidity 0.8.30 (optimization on)
+4. Set Environment to "Injected Provider - MetaMask"
+5. Deploy on Sepolia
+6. Update `CONTRACT_ADDRESS` in HTML
+7. Push to GitHub Pages
 
 ---
 
 ## License
 
-MIT License - feel free to use, modify, and distribute.
+MIT License - Free to use, modify, and distribute.
 
 ---
 
-**Built to understand how blockchain voting works.**
+**Built with 🗳️ for transparent and fair elections**
