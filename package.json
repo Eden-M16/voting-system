@@ -1,0 +1,27 @@
+{
+  "name": "votechain",
+  "version": "2.0.0",
+  "description": "Advanced blockchain voting system with weighted voting, voter registration, and full admin controls",
+  "main": "voting-app.html",
+  "scripts": {
+    "start": "npx live-server --port=3000",
+    "deploy": "git push origin main"
+  },
+  "keywords": [
+    "blockchain",
+    "ethereum",
+    "solidity",
+    "voting-system",
+    "web3",
+    "dapp",
+    "smart-contract",
+    "weighted-voting",
+    "sepolia"
+  ],
+  "author": "Eden-M16",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Eden-M16/voting-system.git"
+  }
+}
