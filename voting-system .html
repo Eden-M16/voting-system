@@ -207,6 +207,16 @@
             padding: 20px;
             color: #666;
         }
+        
+        .network-badge {
+            display: inline-block;
+            background: #48bb78;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
@@ -218,13 +228,15 @@
             <div>
                 <strong>Wallet Status:</strong> <span id="walletStatus">Not connected</span>
                 <div class="contract-address" style="margin-top: 5px;">
-                    📄 Contract: <span id="contractAddress">0x7EF2e0048f5bAeDe046f6BF797943daF4ED8CB47</span>
+                    📄 Contract: <span id="contractAddress">0x13100E329e5916aEd38457797cBa5d49A2F87ADD</span>
+                    <span class="network-badge">Sepolia</span>
                 </div>
             </div>
             <button id="connectWallet">🔌 Connect MetaMask</button>
         </div>
         
         <div id="app" style="display: none;">
+            <!-- Admin Section -->
             <div class="section" id="adminSection" style="display: none;">
                 <h2>📋 Admin Panel</h2>
                 <input type="text" id="electionTitle" placeholder="Election Title (e.g., Presidential Election 2024)">
@@ -237,6 +249,7 @@
                 <button id="createElection" style="background: #667eea;">✨ Create Election</button>
             </div>
             
+            <!-- Elections Section -->
             <div class="section">
                 <h2>📊 Elections</h2>
                 <div id="electionsList" class="loading">Loading elections...</div>
@@ -244,64 +257,25 @@
         </div>
     </div>
     
-    <!-- UPDATED: Using more reliable ethers CDN -->
     <script src="https://cdn.jsdelivr.net/npm/ethers@6.10.0/dist/ethers.umd.min.js"></script>
     
     <script>
-        // Check if ethers loaded
-        if (typeof ethers === 'undefined') {
-            document.getElementById('walletStatus').innerHTML = '❌ Error: ethers library not loaded. Please refresh the page.';
-            console.error('ethers library failed to load');
-        } else {
-            console.log('ethers library loaded successfully');
-        }
-        
-        // CONTRACT DETAILS
-        const CONTRACT_ADDRESS = "0x7EF2e0048f5bAeDe046f6BF797943daF4ED8CB47";
+        // YOUR DEPLOYED CONTRACT ADDRESS ON SEPOLIA
+        const CONTRACT_ADDRESS = "0x13100E329e5916aEd38457797cBa5d49A2F87ADD";
         
         const CONTRACT_ABI = [
-            {
-                "inputs": [
-                    {"internalType": "string","name": "_title","type": "string"},
-                    {"internalType": "uint256","name": "_durationMinutes","type": "uint256"},
-                    {"internalType": "string[]","name": "_candidateNames","type": "string[]"}
-                ],
-                "name": "createElection","outputs": [],"stateMutability": "nonpayable","type": "function"
-            },
-            {
-                "inputs": [{"internalType": "uint256","name": "_electionId","type": "uint256"}],
-                "name": "endElection","outputs": [],"stateMutability": "nonpayable","type": "function"
-            },
-            {
-                "inputs": [{"internalType": "uint256","name": "_electionId","type": "uint256"},{"internalType": "uint256","name": "_candidateIndex","type": "uint256"}],
-                "name": "vote","outputs": [],"stateMutability": "nonpayable","type": "function"
-            },
-            {
-                "inputs": [],"name": "electionId","outputs": [{"internalType": "uint256","name": "","type": "uint256"}],"stateMutability": "view","type": "function"
-            },
-            {
-                "inputs": [{"internalType": "uint256","name": "_electionId","type": "uint256"}],
-                "name": "getElectionInfo","outputs": [
-                    {"internalType": "string","name": "title","type": "string"},
-                    {"internalType": "bool","name": "active","type": "bool"},
-                    {"internalType": "uint256","name": "endTime","type": "uint256"},
-                    {"internalType": "uint256","name": "candidateCount","type": "uint256"}
-                ],"stateMutability": "view","type": "function"
-            },
-            {
-                "inputs": [{"internalType": "uint256","name": "_electionId","type": "uint256"},{"internalType": "uint256","name": "_candidateIndex","type": "uint256"}],
-                "name": "getCandidate","outputs": [
-                    {"internalType": "string","name": "name","type": "string"},
-                    {"internalType": "uint256","name": "votes","type": "uint256"}
-                ],"stateMutability": "view","type": "function"
-            },
-            {
-                "inputs": [{"internalType": "uint256","name": "_electionId","type": "uint256"},{"internalType": "address","name": "_voter","type": "address"}],
-                "name": "hasVoted","outputs": [{"internalType": "bool","name": "","type": "bool"}],"stateMutability": "view","type": "function"
-            },
-            {
-                "inputs": [],"name": "owner","outputs": [{"internalType": "address","name": "","type": "address"}],"stateMutability": "view","type": "function"
-            }
+            {"inputs":[],"stateMutability":"nonpayable","type":"constructor"},
+            {"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"electionId","type":"uint256"},{"indexed":false,"internalType":"string","name":"title","type":"string"}],"name":"ElectionCreated","type":"event"},
+            {"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"electionId","type":"uint256"},{"indexed":false,"internalType":"address","name":"voter","type":"address"}],"name":"Voted","type":"event"},
+            {"inputs":[{"internalType":"string","name":"_title","type":"string"},{"internalType":"uint256","name":"_durationMinutes","type":"uint256"},{"internalType":"string[]","name":"_candidateNames","type":"string[]"}],"name":"createElection","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[],"name":"electionId","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"elections","outputs":[{"internalType":"string","name":"title","type":"string"},{"internalType":"bool","name":"active","type":"bool"},{"internalType":"uint256","name":"endTime","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"}],"name":"endElection","outputs":[],"stateMutability":"nonpayable","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"},{"internalType":"uint256","name":"_candidateIndex","type":"uint256"}],"name":"getCandidate","outputs":[{"internalType":"string","name":"name","type":"string"},{"internalType":"uint256","name":"votes","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"}],"name":"getElectionInfo","outputs":[{"internalType":"string","name":"title","type":"string"},{"internalType":"bool","name":"active","type":"bool"},{"internalType":"uint256","name":"endTime","type":"uint256"},{"internalType":"uint256","name":"candidateCount","type":"uint256"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"},{"internalType":"address","name":"_voter","type":"address"}],"name":"hasVoted","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},
+            {"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},
+            {"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"},{"internalType":"uint256","name":"_candidateIndex","type":"uint256"}],"name":"vote","outputs":[],"stateMutability":"nonpayable","type":"function"}
         ];
         
         let provider, signer, contract, userAddress;
@@ -312,32 +286,55 @@
             if (typeof window.ethereum !== 'undefined') {
                 try {
                     showAlert('Connecting to wallet...', 'info');
-                    
-                    // Create provider using window.ethereum
                     provider = new ethers.BrowserProvider(window.ethereum);
                     await provider.send("eth_requestAccounts", []);
                     signer = await provider.getSigner();
                     userAddress = await signer.getAddress();
-                    contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
                     
                     const network = await provider.getNetwork();
-                    const networkName = network.name === 'unknown' ? `Chain ID: ${network.chainId}` : network.name;
+                    const chainId = Number(network.chainId);
                     
-                    document.getElementById('walletStatus').innerHTML = `✅ Connected: ${userAddress.slice(0,6)}...${userAddress.slice(-4)} on ${networkName}`;
+                    // Check if on Sepolia (chain ID 11155111)
+                    if (chainId !== 11155111) {
+                        showAlert('⚠️ Please switch to Sepolia Testnet in MetaMask', 'error');
+                        // Try to prompt network switch
+                        try {
+                            await window.ethereum.request({
+                                method: 'wallet_switchEthereumChain',
+                                params: [{ chainId: '0xaa36a7' }] // 11155111 in hex
+                            });
+                        } catch (switchError) {
+                            console.log('Could not switch network automatically');
+                        }
+                        return;
+                    }
+                    
+                    contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+                    
+                    document.getElementById('walletStatus').innerHTML = `✅ Connected: ${userAddress.slice(0,6)}...${userAddress.slice(-4)} on Sepolia`;
                     document.getElementById('connectWallet').innerHTML = '✓ Connected';
                     document.getElementById('connectWallet').disabled = true;
                     document.getElementById('app').style.display = 'block';
                     
+                    // Check if contract exists
+                    const code = await provider.getCode(CONTRACT_ADDRESS);
+                    if (code === '0x') {
+                        showAlert('❌ Contract not found at this address. Make sure you\'re on Sepolia network.', 'error');
+                    } else {
+                        showAlert('✅ Connected to Voting Contract on Sepolia!', 'success');
+                    }
+                    
+                    // Check if user is admin
                     try {
                         const owner = await contract.owner();
                         if (userAddress.toLowerCase() === owner.toLowerCase()) {
                             document.getElementById('adminSection').style.display = 'block';
-                            showAlert('Admin access granted! You can create and manage elections.', 'success');
+                            showAlert('👑 Admin access granted! You can create and manage elections.', 'success');
                         } else {
-                            showAlert('Connected as voter. You can vote in active elections.', 'info');
+                            showAlert('🗳️ Connected as voter. You can vote in active elections.', 'info');
                         }
                     } catch (e) {
-                        console.error('Error checking owner:', e);
+                        console.log('Could not check owner:', e);
                     }
                     
                     loadElections();
@@ -410,7 +407,7 @@
                 const electionsDiv = document.getElementById('electionsList');
                 
                 if (electionCount == 0) {
-                    electionsDiv.innerHTML = '<p style="text-align: center; color: #666;">📭 No elections created yet.</p>';
+                    electionsDiv.innerHTML = '<p style="text-align: center; color: #666;">📭 No elections created yet. Be the first to create one!</p>';
                     return;
                 }
                 
@@ -447,7 +444,7 @@
                 }
             } catch (error) {
                 console.error(error);
-                document.getElementById('electionsList').innerHTML = '<p style="color: red;">❌ Error loading elections. Make sure you\'re connected to the correct network.</p>';
+                document.getElementById('electionsList').innerHTML = '<p style="color: red;">❌ Error loading elections. Make sure you\'re connected to Sepolia network.</p>';
             }
         }
         
@@ -468,10 +465,15 @@
                     console.log('Could not check vote status');
                 }
                 
+                let totalVotes = 0;
+                const candidateResults = [];
+                
                 for (let j = 0; j < candidateCount; j++) {
                     const candidate = await contract.getCandidate(electionId, j);
                     const candidateName = candidate[0];
                     const candidateVotes = Number(candidate[1]);
+                    totalVotes += candidateVotes;
+                    candidateResults.push({ name: candidateName, votes: candidateVotes, index: j });
                     
                     const candidateDiv = document.createElement('div');
                     candidateDiv.className = 'candidate';
@@ -486,8 +488,27 @@
                     `;
                     candidatesDiv.appendChild(candidateDiv);
                 }
+                
+                // Show results for ended elections
+                if (!isActive) {
+                    const resultsDiv = document.getElementById(`results-${electionId}`);
+                    if (resultsDiv && candidateResults.length > 0) {
+                        const sorted = [...candidateResults].sort((a, b) => b.votes - a.votes);
+                        const winner = sorted[0];
+                        resultsDiv.innerHTML = `
+                            <strong>🏆 FINAL RESULTS 🏆</strong><br>
+                            Total Votes: ${totalVotes}<br>
+                            Winner: ${winner.name} with ${winner.votes} vote${winner.votes !== 1 ? 's' : ''}<br>
+                            ${sorted.map(c => `${c.name}: ${c.votes} votes`).join(' | ')}
+                        `;
+                    }
+                }
             } catch (error) {
-                console.error(`Error loading candidates:`, error);
+                console.error(`Error loading candidates for election ${electionId}:`, error);
+                const candidatesDiv = document.getElementById(`candidates-${electionId}`);
+                if (candidatesDiv) {
+                    candidatesDiv.innerHTML = '<p style="color: red;">Error loading candidates</p>';
+                }
             }
         }
         
@@ -538,9 +559,6 @@
         window.addEventListener('load', () => {
             if (typeof window.ethereum === 'undefined') {
                 showAlert('MetaMask not detected! Please install MetaMask to use this application.', 'error');
-            }
-            if (typeof ethers === 'undefined') {
-                showAlert('Error: ethers library failed to load. Please refresh the page or check your internet connection.', 'error');
             }
         });
     </script>
