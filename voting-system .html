@@ -207,27 +207,6 @@
             padding: 20px;
             color: #666;
         }
-        
-        .badge {
-            display: inline-block;
-            background: #667eea;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            margin-left: 10px;
-        }
-        
-        @media (max-width: 768px) {
-            .container {
-                padding: 20px;
-            }
-            
-            .wallet-info {
-                flex-direction: column;
-                text-align: center;
-            }
-        }
     </style>
 </head>
 <body>
@@ -246,7 +225,6 @@
         </div>
         
         <div id="app" style="display: none;">
-            <!-- Admin Section -->
             <div class="section" id="adminSection" style="display: none;">
                 <h2>📋 Admin Panel</h2>
                 <input type="text" id="electionTitle" placeholder="Election Title (e.g., Presidential Election 2024)">
@@ -259,7 +237,6 @@
                 <button id="createElection" style="background: #667eea;">✨ Create Election</button>
             </div>
             
-            <!-- Elections Section -->
             <div class="section">
                 <h2>📊 Elections</h2>
                 <div id="electionsList" class="loading">Loading elections...</div>
@@ -267,9 +244,19 @@
         </div>
     </div>
     
-    <script src="https://cdn.jsdelivr.net/npm/ethers@6.7.0/dist/ethers.min.js"></script>
+    <!-- UPDATED: Using more reliable ethers CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.10.0/dist/ethers.umd.min.js"></script>
+    
     <script>
-        // CONTRACT DETAILS - UPDATED WITH YOUR ADDRESS
+        // Check if ethers loaded
+        if (typeof ethers === 'undefined') {
+            document.getElementById('walletStatus').innerHTML = '❌ Error: ethers library not loaded. Please refresh the page.';
+            console.error('ethers library failed to load');
+        } else {
+            console.log('ethers library loaded successfully');
+        }
+        
+        // CONTRACT DETAILS
         const CONTRACT_ADDRESS = "0x7EF2e0048f5bAeDe046f6BF797943daF4ED8CB47";
         
         const CONTRACT_ABI = [
@@ -319,21 +306,20 @@
         
         let provider, signer, contract, userAddress;
         
-        // Display contract address
         document.getElementById('contractAddress').textContent = CONTRACT_ADDRESS;
         
-        // Connect Wallet
         document.getElementById('connectWallet').onclick = async () => {
             if (typeof window.ethereum !== 'undefined') {
                 try {
                     showAlert('Connecting to wallet...', 'info');
+                    
+                    // Create provider using window.ethereum
                     provider = new ethers.BrowserProvider(window.ethereum);
                     await provider.send("eth_requestAccounts", []);
                     signer = await provider.getSigner();
                     userAddress = await signer.getAddress();
                     contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
                     
-                    // Get network info
                     const network = await provider.getNetwork();
                     const networkName = network.name === 'unknown' ? `Chain ID: ${network.chainId}` : network.name;
                     
@@ -342,7 +328,6 @@
                     document.getElementById('connectWallet').disabled = true;
                     document.getElementById('app').style.display = 'block';
                     
-                    // Check if user is owner (admin)
                     try {
                         const owner = await contract.owner();
                         if (userAddress.toLowerCase() === owner.toLowerCase()) {
@@ -366,7 +351,6 @@
             }
         };
         
-        // Add Candidate Input
         document.getElementById('addCandidate').onclick = () => {
             const div = document.getElementById('candidatesList');
             const input = document.createElement('input');
@@ -376,7 +360,6 @@
             div.appendChild(input);
         };
         
-        // Create Election
         document.getElementById('createElection').onclick = async () => {
             const title = document.getElementById('electionTitle').value;
             const duration = parseInt(document.getElementById('durationMinutes').value);
@@ -394,7 +377,7 @@
             }
             
             if (duration <= 0) {
-                showAlert('Please enter a valid duration (positive number)', 'error');
+                showAlert('Please enter a valid duration', 'error');
                 return;
             }
             
@@ -421,7 +404,6 @@
             }
         };
         
-        // Load All Elections
         async function loadElections() {
             try {
                 const electionCount = await contract.electionId();
@@ -451,7 +433,6 @@
                             </div>
                             <p style="color: #666; margin: 10px 0;">
                                 📅 Ends: ${endTime.toLocaleString()}
-                                ${endTime < new Date() && isActive ? ' ⚠️ (Should have ended)' : ''}
                             </p>
                             <p>👥 Candidates: ${candidateCount}</p>
                             <div id="candidates-${i}" style="margin-top: 15px;">Loading candidates...</div>
@@ -462,7 +443,6 @@
                         await loadCandidates(i, isActive);
                     } catch (err) {
                         console.error(`Error loading election ${i}:`, err);
-                        electionsDiv.innerHTML += `<div class="election-card"><p>Error loading election ${i}</p></div>`;
                     }
                 }
             } catch (error) {
@@ -471,7 +451,6 @@
             }
         }
         
-        // Load Candidates for an Election
         async function loadCandidates(electionId, isActive) {
             try {
                 const info = await contract.getElectionInfo(electionId);
@@ -489,15 +468,10 @@
                     console.log('Could not check vote status');
                 }
                 
-                let totalVotes = 0;
-                const candidateResults = [];
-                
                 for (let j = 0; j < candidateCount; j++) {
                     const candidate = await contract.getCandidate(electionId, j);
                     const candidateName = candidate[0];
                     const candidateVotes = Number(candidate[1]);
-                    totalVotes += candidateVotes;
-                    candidateResults.push({ name: candidateName, votes: candidateVotes, index: j });
                     
                     const candidateDiv = document.createElement('div');
                     candidateDiv.className = 'candidate';
@@ -512,31 +486,11 @@
                     `;
                     candidatesDiv.appendChild(candidateDiv);
                 }
-                
-                // Show results for ended elections
-                if (!isActive) {
-                    const resultsDiv = document.getElementById(`results-${electionId}`);
-                    if (resultsDiv && candidateResults.length > 0) {
-                        const sorted = [...candidateResults].sort((a, b) => b.votes - a.votes);
-                        const winner = sorted[0];
-                        resultsDiv.innerHTML = `
-                            <strong>🏆 FINAL RESULTS 🏆</strong><br>
-                            Total Votes: ${totalVotes}<br>
-                            Winner: ${winner.name} with ${winner.votes} vote${winner.votes !== 1 ? 's' : ''}<br>
-                            ${sorted.map(c => `${c.name}: ${c.votes} votes`).join(' | ')}
-                        `;
-                    }
-                }
             } catch (error) {
-                console.error(`Error loading candidates for election ${electionId}:`, error);
-                const candidatesDiv = document.getElementById(`candidates-${electionId}`);
-                if (candidatesDiv) {
-                    candidatesDiv.innerHTML = '<p style="color: red;">Error loading candidates</p>';
-                }
+                console.error(`Error loading candidates:`, error);
             }
         }
         
-        // Cast Vote
         window.castVote = async (electionId, candidateIndex) => {
             if (!contract || !userAddress) {
                 showAlert('Please connect your wallet first', 'error');
@@ -571,7 +525,6 @@
             }
         };
         
-        // Show Alert
         function showAlert(message, type) {
             const alertDiv = document.createElement('div');
             alertDiv.className = `alert ${type}`;
@@ -582,10 +535,12 @@
             setTimeout(() => alertDiv.remove(), 5000);
         }
         
-        // Check if MetaMask is installed
         window.addEventListener('load', () => {
             if (typeof window.ethereum === 'undefined') {
                 showAlert('MetaMask not detected! Please install MetaMask to use this application.', 'error');
+            }
+            if (typeof ethers === 'undefined') {
+                showAlert('Error: ethers library failed to load. Please refresh the page or check your internet connection.', 'error');
             }
         });
     </script>
