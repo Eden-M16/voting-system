@@ -8,17 +8,20 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root {
-            --primary: #4361ee;
-            --primary-dark: #3a56d4;
-            --secondary: #7209b7;
-            --success: #06ffa5;
-            --danger: #ef476f;
-            --warning: #ffd166;
-            --dark: #0f172a;
-            --light: #f8fafc;
-            --gray: #64748b;
-            --card-bg: rgba(255, 255, 255, 0.95);
-            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --primary: #0A2472;
+            --primary-dark: #051A4F;
+            --primary-light: #1E3A8A;
+            --secondary: #FFD966;
+            --secondary-dark: #E6C34F;
+            --success: #10B981;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --dark: #1F2937;
+            --light: #F9FAFB;
+            --gray: #6B7280;
+            --card-bg: #FFFFFF;
+            --gradient: linear-gradient(135deg, #0A2472 0%, #1E3A8A 100%);
+            --gradient-gold: linear-gradient(135deg, #FFD966 0%, #F59E0B 100%);
         }
 
         * {
@@ -29,35 +32,22 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background: var(--gradient);
+            background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
             min-height: 100vh;
             color: var(--dark);
         }
 
-        /* Animated Background */
-        .bg-animation {
+        /* Animated Background Pattern */
+        .bg-pattern {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             z-index: 0;
-            overflow: hidden;
-        }
-
-        .bg-animation::before {
-            content: '';
-            position: absolute;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
-            background-size: 50px 50px;
-            animation: moveGrid 20s linear infinite;
-        }
-
-        @keyframes moveGrid {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(50px, 50px); }
+            opacity: 0.05;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%230A2472' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            background-repeat: repeat;
         }
 
         /* Container */
@@ -71,12 +61,12 @@
 
         /* Header */
         .header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
+            background: var(--card-bg);
             border-radius: 24px;
             padding: 20px 30px;
             margin-bottom: 30px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+            border: 1px solid rgba(10, 36, 114, 0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -109,16 +99,12 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            background: #e8f5e9;
+            background: #ECFDF5;
             padding: 8px 16px;
             border-radius: 40px;
             font-size: 14px;
             font-weight: 500;
-        }
-
-        .network-badge i {
             color: var(--success);
-            font-size: 12px;
         }
 
         .connect-btn {
@@ -137,7 +123,7 @@
 
         .connect-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(67, 97, 238, 0.4);
+            box-shadow: 0 5px 20px rgba(10, 36, 114, 0.3);
         }
 
         /* Stats Cards */
@@ -149,18 +135,21 @@
         }
 
         .stat-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
+            background: var(--card-bg);
             border-radius: 20px;
             padding: 20px;
             display: flex;
             align-items: center;
             gap: 15px;
-            transition: transform 0.3s;
+            transition: all 0.3s;
+            border: 1px solid rgba(10, 36, 114, 0.1);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
         }
 
         .stat-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(10, 36, 114, 0.1);
+            border-color: rgba(10, 36, 114, 0.2);
         }
 
         .stat-icon {
@@ -178,7 +167,7 @@
         .stat-info h3 {
             font-size: 28px;
             font-weight: 700;
-            color: var(--dark);
+            color: var(--primary);
         }
 
         .stat-info p {
@@ -195,8 +184,8 @@
         }
 
         .tab-btn {
-            background: rgba(255, 255, 255, 0.9);
-            border: none;
+            background: var(--card-bg);
+            border: 1px solid rgba(10, 36, 114, 0.2);
             padding: 12px 24px;
             border-radius: 40px;
             font-weight: 600;
@@ -205,16 +194,19 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            color: var(--gray);
         }
 
         .tab-btn.active {
             background: var(--gradient);
             color: white;
+            border-color: transparent;
         }
 
         .tab-btn:hover:not(.active) {
-            background: white;
-            transform: translateY(-2px);
+            background: rgba(10, 36, 114, 0.05);
+            border-color: var(--primary);
+            color: var(--primary);
         }
 
         /* Election Cards */
@@ -225,16 +217,17 @@
         }
 
         .election-card {
-            background: white;
+            background: var(--card-bg);
             border-radius: 24px;
             overflow: hidden;
             transition: all 0.3s;
             box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            border: 1px solid rgba(10, 36, 114, 0.1);
         }
 
         .election-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 15px 40px rgba(10, 36, 114, 0.12);
         }
 
         .card-header {
@@ -260,13 +253,13 @@
         }
 
         .status-active {
-            background: rgba(6, 255, 165, 0.3);
-            color: #06ffa5;
+            background: rgba(16, 185, 129, 0.2);
+            color: #10B981;
         }
 
         .status-ended {
-            background: rgba(239, 71, 111, 0.3);
-            color: #ef476f;
+            background: rgba(239, 68, 68, 0.2);
+            color: #EF4444;
         }
 
         .card-body {
@@ -283,6 +276,7 @@
 
         .election-meta i {
             margin-right: 5px;
+            color: var(--primary);
         }
 
         .candidates-list {
@@ -294,12 +288,12 @@
             justify-content: space-between;
             align-items: center;
             padding: 12px;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid #E5E7EB;
             transition: background 0.3s;
         }
 
         .candidate-item:hover {
-            background: #f8fafc;
+            background: #F9FAFB;
         }
 
         .candidate-info {
@@ -322,6 +316,7 @@
 
         .candidate-name {
             font-weight: 600;
+            color: var(--dark);
         }
 
         .candidate-party {
@@ -347,16 +342,12 @@
 
         .vote-btn:hover {
             transform: scale(1.05);
-        }
-
-        .vote-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+            box-shadow: 0 3px 10px rgba(10, 36, 114, 0.3);
         }
 
         .voted-badge {
-            background: #e8f5e9;
-            color: #2e7d32;
+            background: #ECFDF5;
+            color: #10B981;
             padding: 5px 12px;
             border-radius: 20px;
             font-size: 12px;
@@ -364,26 +355,27 @@
         }
 
         .progress-bar {
-            height: 8px;
-            background: #e2e8f0;
-            border-radius: 4px;
+            height: 6px;
+            background: #E5E7EB;
+            border-radius: 3px;
             overflow: hidden;
-            margin: 15px 0;
+            margin: 10px 0;
         }
 
         .progress-fill {
             height: 100%;
             background: var(--gradient);
-            border-radius: 4px;
+            border-radius: 3px;
             transition: width 0.5s ease;
         }
 
         /* Admin Panel */
         .admin-panel {
-            background: white;
+            background: var(--card-bg);
             border-radius: 24px;
             padding: 25px;
             margin-bottom: 30px;
+            border: 1px solid rgba(10, 36, 114, 0.1);
         }
 
         .admin-panel h2 {
@@ -391,6 +383,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            color: var(--primary);
         }
 
         .form-group {
@@ -401,12 +394,13 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 500;
+            color: var(--dark);
         }
 
         .form-control {
             width: 100%;
             padding: 12px 16px;
-            border: 2px solid #e2e8f0;
+            border: 2px solid #E5E7EB;
             border-radius: 12px;
             font-family: inherit;
             transition: all 0.3s;
@@ -426,7 +420,7 @@
         .candidate-input-group input {
             flex: 1;
             padding: 10px;
-            border: 2px solid #e2e8f0;
+            border: 2px solid #E5E7EB;
             border-radius: 8px;
         }
 
@@ -456,47 +450,38 @@
             max-width: 400px;
             width: 90%;
             text-align: center;
-            animation: modalSlideIn 0.3s ease;
-        }
-
-        @keyframes modalSlideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-50px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .modal-icon {
-            font-size: 50px;
-            margin-bottom: 20px;
         }
 
         .modal-content h3 {
-            margin-bottom: 10px;
+            margin: 20px 0 10px;
+            color: var(--primary);
         }
 
-        .modal-content p {
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn-confirm {
+            background: var(--gradient);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-cancel {
+            background: #F3F4F6;
             color: var(--gray);
-            margin-bottom: 20px;
-        }
-
-        /* Loading Spinner */
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+            border: none;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
         }
 
         /* Toast Notifications */
@@ -515,7 +500,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
             animation: slideInRight 0.3s ease;
         }
 
@@ -534,28 +519,28 @@
         .toast.error { border-left: 4px solid var(--danger); }
         .toast.info { border-left: 4px solid var(--primary); }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .elections-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
+        /* Loading Spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         /* Empty State */
         .empty-state {
             text-align: center;
             padding: 60px;
-            background: white;
+            background: var(--card-bg);
             border-radius: 24px;
+            border: 1px solid rgba(10, 36, 114, 0.1);
         }
 
         .empty-state i {
@@ -564,23 +549,29 @@
             margin-bottom: 20px;
         }
 
-        .empty-state h3 {
-            margin-bottom: 10px;
-        }
-
-        .empty-state p {
-            color: var(--gray);
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+            .elections-grid {
+                grid-template-columns: 1fr;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
     </style>
 </head>
 <body>
-    <div class="bg-animation"></div>
+    <div class="bg-pattern"></div>
     
     <div class="container">
         <!-- Header -->
         <div class="header">
             <div class="logo">
-                <h1><i class="fas fa-vote-yea"></i> VoteChain</h1>
+                <h1><i class="fas fa-vote-yea" style="color: #FFD966;"></i> VoteChain</h1>
                 <p>Decentralized • Transparent • Immutable</p>
             </div>
             <div class="wallet-status">
@@ -642,7 +633,7 @@
 
         <!-- Admin Panel -->
         <div id="adminPanel" class="admin-panel" style="display: none;">
-            <h2><i class="fas fa-crown" style="color: #ffd166;"></i> Create New Election</h2>
+            <h2><i class="fas fa-crown" style="color: #FFD966;"></i> Create New Election</h2>
             <div class="form-group">
                 <label><i class="fas fa-tag"></i> Election Title</label>
                 <input type="text" id="electionTitle" class="form-control" placeholder="e.g., Presidential Election 2024">
@@ -660,11 +651,11 @@
                         <input type="text" placeholder="Party/Description" class="candidate-party-input">
                     </div>
                 </div>
-                <button type="button" id="addCandidateBtn" style="background: none; color: var(--primary); border: 2px dashed var(--primary); padding: 10px; margin-top: 10px;">
+                <button type="button" id="addCandidateBtn" style="background: none; color: var(--primary); border: 2px dashed var(--primary); padding: 10px; margin-top: 10px; width: 100%; border-radius: 12px; cursor: pointer;">
                     <i class="fas fa-plus"></i> Add Candidate
                 </button>
             </div>
-            <button id="createElectionBtn" style="background: var(--gradient); width: 100%; padding: 14px; font-size: 16px;">
+            <button id="createElectionBtn" style="background: var(--gradient); width: 100%; padding: 14px; font-size: 16px; border: none; border-radius: 12px; color: white; font-weight: 600; cursor: pointer;">
                 <i class="fas fa-rocket"></i> Create Election
             </button>
         </div>
@@ -679,13 +670,13 @@
     <!-- Confirmation Modal -->
     <div id="confirmModal" class="modal">
         <div class="modal-content">
-            <div class="modal-icon">
-                <i class="fas fa-check-circle" style="color: var(--success); font-size: 60px;"></i>
-            </div>
+            <i class="fas fa-check-circle" style="font-size: 60px; color: var(--primary);"></i>
             <h3>Confirm Vote</h3>
             <p id="confirmMessage">Are you sure you want to vote for this candidate?</p>
-            <button id="confirmVoteBtn" style="background: var(--gradient); padding: 12px 24px; margin-right: 10px;">Confirm</button>
-            <button id="cancelVoteBtn" style="background: var(--gray); padding: 12px 24px;">Cancel</button>
+            <div class="modal-buttons">
+                <button id="confirmVoteBtn" class="btn-confirm">Confirm</button>
+                <button id="cancelVoteBtn" class="btn-cancel">Cancel</button>
+            </div>
         </div>
     </div>
 
@@ -714,21 +705,16 @@
         let currentTab = 'active';
         let pendingVote = null;
         
-        // Toast Notifications
         function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
-            const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', info: 'fa-info-circle' };
-            toast.innerHTML = `
-                <i class="fas ${icons[type]}" style="color: ${type === 'success' ? '#06ffa5' : type === 'error' ? '#ef476f' : '#4361ee'}"></i>
-                <span>${message}</span>
-            `;
+            toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i><span>${message}</span>`;
             container.appendChild(toast);
             setTimeout(() => toast.remove(), 5000);
         }
         
-        // Connect Wallet
+        // Connect Wallet (same as before)
         document.getElementById('connectWalletBtn').onclick = async () => {
             if (typeof window.ethereum !== 'undefined') {
                 try {
@@ -738,9 +724,7 @@
                     userAddress = await signer.getAddress();
                     
                     const network = await provider.getNetwork();
-                    const chainId = Number(network.chainId);
-                    
-                    if (chainId !== 11155111) {
+                    if (Number(network.chainId) !== 11155111) {
                         showToast('Please switch to Sepolia Testnet', 'error');
                         try {
                             await window.ethereum.request({
@@ -781,7 +765,6 @@
             }
         };
         
-        // Load all data
         async function loadAllData() {
             try {
                 const count = await contract.electionId();
@@ -819,14 +802,12 @@
                 
                 document.getElementById('activeElections').textContent = activeCount;
                 document.getElementById('totalVotes').textContent = totalVotes;
-                
                 renderElections();
             } catch (error) {
                 showToast('Error loading data: ' + error.message, 'error');
             }
         }
         
-        // Render elections
         async function renderElections() {
             const container = document.getElementById('electionsContainer');
             const filtered = electionsData.filter(e => currentTab === 'active' ? e.isActive : !e.isActive);
@@ -886,8 +867,8 @@
                             `).join('')}
                         </div>
                         ${!election.isActive ? `
-                            <div class="result" style="margin-top: 15px; padding: 10px; background: #f1f5f9; border-radius: 12px;">
-                                <strong><i class="fas fa-trophy"></i> Winner: </strong>
+                            <div style="margin-top: 15px; padding: 10px; background: #F3F4F6; border-radius: 12px;">
+                                <strong><i class="fas fa-trophy" style="color: #FFD966;"></i> Winner: </strong>
                                 ${(() => {
                                     const winner = election.candidates.reduce((a, b) => a.votes > b.votes ? a : b, { name: 'No votes', votes: 0 });
                                     return `${winner.name} (${winner.votes} votes)`;
@@ -900,18 +881,15 @@
             }
         }
         
-        // Prompt vote confirmation
         window.promptVote = (electionId, candidateIndex, candidateName) => {
             pendingVote = { electionId, candidateIndex };
             document.getElementById('confirmMessage').innerHTML = `Are you sure you want to vote for <strong>${candidateName}</strong>?`;
             document.getElementById('confirmModal').classList.add('active');
         };
         
-        // Confirm vote
         document.getElementById('confirmVoteBtn').onclick = async () => {
             if (!pendingVote) return;
             document.getElementById('confirmModal').classList.remove('active');
-            
             try {
                 showToast('Casting your vote...', 'info');
                 const tx = await contract.vote(pendingVote.electionId, pendingVote.candidateIndex);
@@ -929,7 +907,6 @@
             pendingVote = null;
         };
         
-        // Admin functions
         document.getElementById('addCandidateBtn').onclick = () => {
             const container = document.getElementById('candidatesContainer');
             const div = document.createElement('div');
@@ -945,21 +922,10 @@
             const title = document.getElementById('electionTitle').value;
             const duration = parseInt(document.getElementById('durationMinutes').value);
             const nameInputs = document.querySelectorAll('.candidate-name-input');
-            const partyInputs = document.querySelectorAll('.candidate-party-input');
+            const candidates = Array.from(nameInputs).map(inp => inp.value).filter(c => c.trim());
             
-            const candidates = [];
-            for (let i = 0; i < nameInputs.length; i++) {
-                if (nameInputs[i].value.trim()) {
-                    candidates.push(nameInputs[i].value.trim());
-                }
-            }
-            
-            if (!title) {
-                showToast('Please enter an election title', 'error');
-                return;
-            }
-            if (candidates.length < 2) {
-                showToast('Please add at least 2 candidates', 'error');
+            if (!title || candidates.length < 2) {
+                showToast('Please fill title and at least 2 candidates', 'error');
                 return;
             }
             
@@ -967,11 +933,9 @@
                 const btn = document.getElementById('createElectionBtn');
                 btn.innerHTML = '<div class="loading-spinner"></div> Creating...';
                 btn.disabled = true;
-                
                 const tx = await contract.createElection(title, duration, candidates);
                 await tx.wait();
-                
-                showToast(`Election "${title}" created successfully!`, 'success');
+                showToast(`Election "${title}" created!`, 'success');
                 document.getElementById('electionTitle').value = '';
                 document.getElementById('candidatesContainer').innerHTML = `
                     <div class="candidate-input-group">
@@ -983,19 +947,17 @@
                 btn.innerHTML = '<i class="fas fa-rocket"></i> Create Election';
                 btn.disabled = false;
             } catch (error) {
-                showToast('Failed to create election: ' + error.message, 'error');
+                showToast('Failed: ' + error.message, 'error');
                 document.getElementById('createElectionBtn').innerHTML = '<i class="fas fa-rocket"></i> Create Election';
                 document.getElementById('createElectionBtn').disabled = false;
             }
         };
         
-        // Tab switching
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.onclick = () => {
                 document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 currentTab = btn.dataset.tab;
-                
                 if (currentTab === 'admin') {
                     document.getElementById('adminPanel').style.display = 'block';
                     document.getElementById('electionsContainer').style.display = 'none';
