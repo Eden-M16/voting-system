@@ -154,7 +154,11 @@ contract AdvancedVoting {
     ) external onlyOwner electionExists(_electionId) {
         Election storage election = elections[_electionId];
         require(election.isActive, "Election must be active");
-        require(block.timestamp < election.startTime, "Election already started");
+        // Allow voter registration during the election window.
+        // Previously this required `block.timestamp < election.startTime`, but `startTime`
+        // is set to `block.timestamp` at `createElection()`, which makes registration
+        // revert almost immediately after creation.
+        require(block.timestamp <= election.endTime, "Election already ended");
         require(_voters.length == _weights.length, "Arrays length mismatch");
         
         for (uint256 i = 0; i < _voters.length; i++) {
