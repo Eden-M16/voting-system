@@ -1,23 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.19;
 
-contract AdvancedVoting {
-    // ============ STRUCTURES ============
-    
-    struct Candidate {
-        string name;
-        string description;
-        uint256 voteCount;
-        bool exists;
-    }
-    
-    struct Voter {
-        bool isRegistered;
-        bool hasVoted;
-        uint256 weight;
-        uint256 votedForCandidateId;
-        uint256 votedAt;
-    }
+contract VoteChain {
+    address public owner;
+    uint256 public electionCount;
     
     struct Election {
         string title;
@@ -29,26 +15,44 @@ contract AdvancedVoting {
         bool isPaused;
         uint256 totalVotes;
         uint256 totalWeightedVotes;
-        Candidate[] candidates;
-        mapping(address => Voter) voters;
-        address[] registeredVoters;
     }
     
-    // ============ STATE VARIABLES ============
+    struct Candidate {
+        string name;
+        string description;
+        uint256 voteCount;
+    }
     
-    address public owner;
-    uint256 public electionCount;
+    struct Voter {
+        bool registered;
+        bool voted;
+        uint256 weight;
+        uint256 votedForCandidateId;
+        uint256 votedAt;
+    }
+    
     mapping(uint256 => Election) public elections;
+    mapping(uint256 => Candidate[]) public candidates;
+    mapping(uint256 => mapping(address => Voter)) public voterInfo;
+    mapping(uint256 => address[]) public registeredVotersList;
     mapping(uint256 => mapping(address => bool)) public voterHistory;
     
-    // ============ EVENTS ============
-    
+    // Events
     event ElectionCreated(
         uint256 indexed electionId,
         string title,
         address indexed creator,
         uint256 startTime,
         uint256 endTime
+    );
+    
+    event ElectionPaused(uint256 indexed electionId);
+    event ElectionUnpaused(uint256 indexed electionId);
+    event ElectionExtended(uint256 indexed electionId, uint256 newEndTime);
+    event ElectionEnded(
+        uint256 indexed electionId,
+        uint256 totalVotes,
+        uint256 totalWeightedVotes
     );
     
     event VoterRegistered(
@@ -65,51 +69,16 @@ contract AdvancedVoting {
         uint256 weight
     );
     
-    event ElectionEnded(
-        uint256 indexed electionId,
-        uint256 totalVotes,
-        uint256 totalWeightedVotes
-    );
-    
-    event ElectionPaused(uint256 indexed electionId);
-    event ElectionUnpaused(uint256 indexed electionId);
-    event ElectionExtended(uint256 indexed electionId, uint256 newEndTime);
-    
-    // ============ MODIFIERS ============
-    
     modifier onlyOwner() {
         require(msg.sender == owner, "Only owner can perform this action");
         _;
     }
     
-    modifier electionExists(uint256 _electionId) {
-        require(_electionId < electionCount, "Election does not exist");
-        _;
-    }
-    
-    modifier electionActive(uint256 _electionId) {
-        Election storage election = elections[_electionId];
-        require(election.isActive, "Election is not active");
-        require(!election.isPaused, "Election is paused");
-        require(block.timestamp >= election.startTime, "Election has not started");
-        require(block.timestamp <= election.endTime, "Election has ended");
-        _;
-    }
-    
-    modifier onlyRegisteredVoter(uint256 _electionId) {
-        Election storage election = elections[_electionId];
-        require(election.voters[msg.sender].isRegistered, "You are not registered to vote");
-        _;
-    }
-    
-    // ============ CONSTRUCTOR ============
-    
     constructor() {
         owner = msg.sender;
     }
     
-    // ============ ADMIN FUNCTIONS ============
-    
+    // Create a new election
     function createElection(
         string memory _title,
         string memory _description,
@@ -117,143 +86,153 @@ contract AdvancedVoting {
         string[] memory _candidateNames,
         string[] memory _candidateDescriptions
     ) external onlyOwner returns (uint256) {
-        require(_candidateNames.length == _candidateDescriptions.length, "Arrays length mismatch");
-        require(_candidateNames.length >= 2, "At least 2 candidates required");
+        require(_candidateNames.length >= 2, "Need at least 2 candidates");
+        require(_candidateNames.length == _candidateDescriptions.length, "Names and descriptions length mismatch");
         
-        uint256 electionId = electionCount;
-        Election storage election = elections[electionId];
+        uint256 electionId = electionCount++;
+        uint256 startTime = block.timestamp;
+        uint256 endTime = startTime + (_durationInMinutes * 1 minutes);
         
-        election.title = _title;
-        election.description = _description;
-        election.creator = msg.sender;
-        election.startTime = block.timestamp;
-        election.endTime = block.timestamp + (_durationInMinutes * 1 minutes);
-        election.isActive = true;
-        election.isPaused = false;
+        elections[electionId] = Election({
+            title: _title,
+            description: _description,
+            creator: msg.sender,
+            startTime: startTime,
+            endTime: endTime,
+            isActive: true,
+            isPaused: false,
+            totalVotes: 0,
+            totalWeightedVotes: 0
+        });
         
         for (uint256 i = 0; i < _candidateNames.length; i++) {
-            election.candidates.push(Candidate({
+            candidates[electionId].push(Candidate({
                 name: _candidateNames[i],
                 description: _candidateDescriptions[i],
-                voteCount: 0,
-                exists: true
+                voteCount: 0
             }));
         }
         
-        electionCount++;
-        
-        emit ElectionCreated(electionId, _title, msg.sender, election.startTime, election.endTime);
+        emit ElectionCreated(electionId, _title, msg.sender, startTime, endTime);
         
         return electionId;
     }
     
+    // Register voters with weights for a specific election
     function registerVoters(
         uint256 _electionId,
         address[] memory _voters,
         uint256[] memory _weights
-    ) external onlyOwner electionExists(_electionId) {
-        Election storage election = elections[_electionId];
-        require(election.isActive, "Election must be active");
-        // Allow voter registration during the election window.
-        // Previously this required `block.timestamp < election.startTime`, but `startTime`
-        // is set to `block.timestamp` at `createElection()`, which makes registration
-        // revert almost immediately after creation.
-        require(block.timestamp <= election.endTime, "Election already ended");
-        require(_voters.length == _weights.length, "Arrays length mismatch");
+    ) external onlyOwner {
+        require(_electionId < electionCount, "Election does not exist");
+        require(elections[_electionId].isActive, "Election is not active");
+        require(_voters.length == _weights.length, "Voters and weights length mismatch");
+        require(_voters.length > 0, "No voters provided");
         
         for (uint256 i = 0; i < _voters.length; i++) {
-            address voter = _voters[i];
-            require(!election.voters[voter].isRegistered, "Voter already registered");
+            address voterAddr = _voters[i];
+            uint256 weight = _weights[i];
             
-            election.voters[voter] = Voter({
-                isRegistered: true,
-                hasVoted: false,
-                weight: _weights[i],
+            require(weight > 0 && weight <= 10, "Weight must be between 1 and 10");
+            require(!voterInfo[_electionId][voterAddr].registered, "Voter already registered");
+            
+            voterInfo[_electionId][voterAddr] = Voter({
+                registered: true,
+                voted: false,
+                weight: weight,
                 votedForCandidateId: 0,
                 votedAt: 0
             });
             
-            election.registeredVoters.push(voter);
+            registeredVotersList[_electionId].push(voterAddr);
             
-            emit VoterRegistered(_electionId, voter, _weights[i]);
+            emit VoterRegistered(_electionId, voterAddr, weight);
         }
     }
     
-    function endElection(uint256 _electionId) external onlyOwner electionExists(_electionId) {
+    // Vote in an election
+    function vote(uint256 _electionId, uint256 _candidateId) external {
+        require(_electionId < electionCount, "Election does not exist");
+        
         Election storage election = elections[_electionId];
-        require(election.isActive, "Election already ended");
+        require(election.isActive, "Election is not active");
+        require(!election.isPaused, "Election is paused");
+        require(block.timestamp < election.endTime, "Election has ended");
         
-        election.isActive = false;
+        Voter storage voter = voterInfo[_electionId][msg.sender];
+        require(voter.registered, "Voter is not registered");
+        require(!voter.voted, "Already voted");
+        require(_candidateId < candidates[_electionId].length, "Invalid candidate");
         
-        emit ElectionEnded(_electionId, election.totalVotes, election.totalWeightedVotes);
-    }
-    
-    function pauseElection(uint256 _electionId) external onlyOwner electionExists(_electionId) {
-        Election storage election = elections[_electionId];
-        require(election.isActive, "Election not active");
-        require(!election.isPaused, "Already paused");
-        
-        election.isPaused = true;
-        
-        emit ElectionPaused(_electionId);
-    }
-    
-    function unpauseElection(uint256 _electionId) external onlyOwner electionExists(_electionId) {
-        Election storage election = elections[_electionId];
-        require(election.isActive, "Election not active");
-        require(election.isPaused, "Not paused");
-        
-        election.isPaused = false;
-        
-        emit ElectionUnpaused(_electionId);
-    }
-    
-    function extendElection(
-        uint256 _electionId,
-        uint256 _extraMinutes
-    ) external onlyOwner electionExists(_electionId) {
-        Election storage election = elections[_electionId];
-        require(election.isActive, "Election not active");
-        
-        election.endTime += (_extraMinutes * 1 minutes);
-        
-        emit ElectionExtended(_electionId, election.endTime);
-    }
-    
-    // ============ VOTING FUNCTIONS ============
-    
-    function vote(
-        uint256 _electionId,
-        uint256 _candidateId
-    ) external electionExists(_electionId) electionActive(_electionId) onlyRegisteredVoter(_electionId) {
-        Election storage election = elections[_electionId];
-        Voter storage voter = election.voters[msg.sender];
-        
-        require(!voter.hasVoted, "Already voted");
-        require(_candidateId < election.candidates.length, "Invalid candidate");
-        
-        voter.hasVoted = true;
+        voter.voted = true;
         voter.votedForCandidateId = _candidateId;
         voter.votedAt = block.timestamp;
-        
-        election.candidates[_candidateId].voteCount += voter.weight;
-        election.totalVotes++;
-        election.totalWeightedVotes += voter.weight;
-        
         voterHistory[_electionId][msg.sender] = true;
+        
+        uint256 weight = voter.weight;
+        candidates[_electionId][_candidateId].voteCount += weight;
+        election.totalVotes++;
+        election.totalWeightedVotes += weight;
         
         emit Voted(
             _electionId,
             msg.sender,
             _candidateId,
-            election.candidates[_candidateId].name,
-            voter.weight
+            candidates[_electionId][_candidateId].name,
+            weight
         );
     }
     
-    // ============ VIEW FUNCTIONS ============
+    // Pause an election
+    function pauseElection(uint256 _electionId) external onlyOwner {
+        require(_electionId < electionCount, "Election does not exist");
+        require(elections[_electionId].isActive, "Election is not active");
+        require(!elections[_electionId].isPaused, "Election is already paused");
+        
+        elections[_electionId].isPaused = true;
+        
+        emit ElectionPaused(_electionId);
+    }
     
-    function getElectionInfo(uint256 _electionId) external view electionExists(_electionId) returns (
+    // Unpause an election
+    function unpauseElection(uint256 _electionId) external onlyOwner {
+        require(_electionId < electionCount, "Election does not exist");
+        require(elections[_electionId].isActive, "Election is not active");
+        require(elections[_electionId].isPaused, "Election is not paused");
+        
+        elections[_electionId].isPaused = false;
+        
+        emit ElectionUnpaused(_electionId);
+    }
+    
+    // Extend election duration
+    function extendElection(uint256 _electionId, uint256 _extraMinutes) external onlyOwner {
+        require(_electionId < electionCount, "Election does not exist");
+        require(elections[_electionId].isActive, "Election is not active");
+        require(_extraMinutes > 0, "Extra minutes must be greater than 0");
+        
+        elections[_electionId].endTime += (_extraMinutes * 1 minutes);
+        
+        emit ElectionExtended(_electionId, elections[_electionId].endTime);
+    }
+    
+    // End an election early
+    function endElection(uint256 _electionId) external onlyOwner {
+        require(_electionId < electionCount, "Election does not exist");
+        require(elections[_electionId].isActive, "Election is already ended");
+        
+        elections[_electionId].isActive = false;
+        
+        emit ElectionEnded(
+            _electionId,
+            elections[_electionId].totalVotes,
+            elections[_electionId].totalWeightedVotes
+        );
+    }
+    
+    // View functions
+    
+    function getElectionInfo(uint256 _electionId) external view returns (
         string memory title,
         string memory description,
         address creator,
@@ -266,119 +245,124 @@ contract AdvancedVoting {
         uint256 candidateCount,
         uint256 registeredVoterCount
     ) {
-        Election storage election = elections[_electionId];
+        require(_electionId < electionCount, "Election does not exist");
+        Election storage e = elections[_electionId];
         return (
-            election.title,
-            election.description,
-            election.creator,
-            election.startTime,
-            election.endTime,
-            election.isActive,
-            election.isPaused,
-            election.totalVotes,
-            election.totalWeightedVotes,
-            election.candidates.length,
-            election.registeredVoters.length
+            e.title,
+            e.description,
+            e.creator,
+            e.startTime,
+            e.endTime,
+            e.isActive,
+            e.isPaused,
+            e.totalVotes,
+            e.totalWeightedVotes,
+            candidates[_electionId].length,
+            registeredVotersList[_electionId].length
         );
     }
     
-    function getCandidate(uint256 _electionId, uint256 _candidateId) external view electionExists(_electionId) returns (
-        string memory name,
-        string memory description,
-        uint256 voteCount
-    ) {
-        Election storage election = elections[_electionId];
-        require(_candidateId < election.candidates.length, "Invalid candidate");
-        
-        Candidate storage candidate = election.candidates[_candidateId];
-        return (candidate.name, candidate.description, candidate.voteCount);
-    }
-    
-    function getAllCandidates(uint256 _electionId) external view electionExists(_electionId) returns (
+    function getAllCandidates(uint256 _electionId) external view returns (
         string[] memory names,
         string[] memory descriptions,
         uint256[] memory voteCounts
     ) {
-        Election storage election = elections[_electionId];
-        uint256 length = election.candidates.length;
+        require(_electionId < electionCount, "Election does not exist");
+        Candidate[] storage cands = candidates[_electionId];
+        uint256 len = cands.length;
         
-        names = new string[](length);
-        descriptions = new string[](length);
-        voteCounts = new uint256[](length);
+        names = new string[](len);
+        descriptions = new string[](len);
+        voteCounts = new uint256[](len);
         
-        for (uint256 i = 0; i < length; i++) {
-            names[i] = election.candidates[i].name;
-            descriptions[i] = election.candidates[i].description;
-            voteCounts[i] = election.candidates[i].voteCount;
+        for (uint256 i = 0; i < len; i++) {
+            names[i] = cands[i].name;
+            descriptions[i] = cands[i].description;
+            voteCounts[i] = cands[i].voteCount;
         }
+        
+        return (names, descriptions, voteCounts);
     }
     
-    function getVoterInfo(uint256 _electionId, address _voter) external view electionExists(_electionId) returns (
+    function getCandidate(uint256 _electionId, uint256 _candidateId) external view returns (
+        string memory name,
+        string memory description,
+        uint256 voteCount
+    ) {
+        require(_electionId < electionCount, "Election does not exist");
+        require(_candidateId < candidates[_electionId].length, "Invalid candidate");
+        Candidate storage c = candidates[_electionId][_candidateId];
+        return (c.name, c.description, c.voteCount);
+    }
+    
+    function getRegisteredVoters(uint256 _electionId) external view returns (
+        address[] memory voters,
+        uint256[] memory weights
+    ) {
+        require(_electionId < electionCount, "Election does not exist");
+        uint256 len = registeredVotersList[_electionId].length;
+        
+        voters = new address[](len);
+        weights = new uint256[](len);
+        
+        for (uint256 i = 0; i < len; i++) {
+            address voterAddr = registeredVotersList[_electionId][i];
+            voters[i] = voterAddr;
+            weights[i] = voterInfo[_electionId][voterAddr].weight;
+        }
+        
+        return (voters, weights);
+    }
+    
+    function getVoterInfo(uint256 _electionId, address _voter) external view returns (
         bool registered,
         bool voted,
         uint256 weight,
         uint256 votedForCandidateId,
         uint256 votedAt
     ) {
-        Election storage election = elections[_electionId];
-        Voter storage voter = election.voters[_voter];
-        
-        return (
-            voter.isRegistered,
-            voter.hasVoted,
-            voter.weight,
-            voter.votedForCandidateId,
-            voter.votedAt
-        );
+        require(_electionId < electionCount, "Election does not exist");
+        Voter storage v = voterInfo[_electionId][_voter];
+        return (v.registered, v.voted, v.weight, v.votedForCandidateId, v.votedAt);
     }
     
-    function getRegisteredVoters(uint256 _electionId) external view electionExists(_electionId) returns (
-        address[] memory voters,
-        uint256[] memory weights
-    ) {
-        Election storage election = elections[_electionId];
-        uint256 length = election.registeredVoters.length;
-        
-        voters = new address[](length);
-        weights = new uint256[](length);
-        
-        for (uint256 i = 0; i < length; i++) {
-            address voterAddr = election.registeredVoters[i];
-            voters[i] = voterAddr;
-            weights[i] = election.voters[voterAddr].weight;
-        }
+    function isVoterRegistered(uint256 _electionId, address _voter) external view returns (bool) {
+        require(_electionId < electionCount, "Election does not exist");
+        return voterInfo[_electionId][_voter].registered;
     }
     
-    function checkHasVoted(uint256 _electionId, address _voter) external view electionExists(_electionId) returns (bool) {
-        return elections[_electionId].voters[_voter].hasVoted;
+    function checkHasVoted(uint256 _electionId, address _voter) external view returns (bool) {
+        require(_electionId < electionCount, "Election does not exist");
+        return voterInfo[_electionId][_voter].voted;
     }
     
-    function isVoterRegistered(uint256 _electionId, address _voter) external view electionExists(_electionId) returns (bool) {
-        return elections[_electionId].voters[_voter].isRegistered;
-    }
-    
-    function getElectionWinner(uint256 _electionId) external view electionExists(_electionId) returns (
+    function getElectionWinner(uint256 _electionId) external view returns (
         uint256 candidateId,
         string memory name,
         uint256 voteCount
     ) {
-        Election storage election = elections[_electionId];
-        require(!election.isActive, "Election still active");
+        require(_electionId < electionCount, "Election does not exist");
+        require(!elections[_electionId].isActive, "Election is still active");
+        
+        Candidate[] storage cands = candidates[_electionId];
+        require(cands.length > 0, "No candidates");
         
         uint256 winningId = 0;
-        uint256 winningVotes = 0;
+        uint256 maxVotes = cands[0].voteCount;
         
-        for (uint256 i = 0; i < election.candidates.length; i++) {
-            if (election.candidates[i].voteCount > winningVotes) {
-                winningVotes = election.candidates[i].voteCount;
+        for (uint256 i = 1; i < cands.length; i++) {
+            if (cands[i].voteCount > maxVotes) {
+                maxVotes = cands[i].voteCount;
                 winningId = i;
             }
         }
         
-        return (
-            winningId,
-            election.candidates[winningId].name,
-            winningVotes
-        );
+        return (winningId, cands[winningId].name, cands[winningId].voteCount);
+    }
+    
+    // Transfer ownership
+    function transferOwnership(address newOwner) external onlyOwner {
+        require(newOwner != address(0), "Invalid address");
+        owner = newOwner;
     }
 }
