@@ -8,7 +8,6 @@
 
 **Live Demo**: [https://eden-m16.github.io/voting-system/voting-app.html](https://eden-m16.github.io/voting-system/voting-app.html)
 
----
 
 ## 📋 Table of Contents
 
@@ -161,6 +160,6 @@ Voters:
 
 MIT License - Free to use, modify, and distribute.
 
----
+---**
 
 **Built with 🗳️ for transparent and fair elections**
