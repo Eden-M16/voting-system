@@ -14,7 +14,6 @@ contract VoteChain {
         bool isActive;
         bool isPaused;
         uint256 totalVotes;
-        uint256 totalWeightedVotes;
     }
     
     struct Candidate {
@@ -26,7 +25,6 @@ contract VoteChain {
     struct Voter {
         bool registered;
         bool voted;
-        uint256 weight;
         uint256 votedForCandidateId;
         uint256 votedAt;
     }
@@ -51,22 +49,19 @@ contract VoteChain {
     event ElectionExtended(uint256 indexed electionId, uint256 newEndTime);
     event ElectionEnded(
         uint256 indexed electionId,
-        uint256 totalVotes,
-        uint256 totalWeightedVotes
+        uint256 totalVotes
     );
     
     event VoterRegistered(
         uint256 indexed electionId,
-        address indexed voter,
-        uint256 weight
+        address indexed voter
     );
     
     event Voted(
         uint256 indexed electionId,
         address indexed voter,
         uint256 candidateId,
-        string candidateName,
-        uint256 weight
+        string candidateName
     );
     
     modifier onlyOwner() {
@@ -101,8 +96,7 @@ contract VoteChain {
             endTime: endTime,
             isActive: true,
             isPaused: false,
-            totalVotes: 0,
-            totalWeightedVotes: 0
+            totalVotes: 0
         });
         
         for (uint256 i = 0; i < _candidateNames.length; i++) {
@@ -118,35 +112,29 @@ contract VoteChain {
         return electionId;
     }
     
-    // Register voters with weights for a specific election
+    // Register voters for a specific election (one-person-one-vote)
     function registerVoters(
         uint256 _electionId,
-        address[] memory _voters,
-        uint256[] memory _weights
+        address[] memory _voters
     ) external onlyOwner {
         require(_electionId < electionCount, "Election does not exist");
         require(elections[_electionId].isActive, "Election is not active");
-        require(_voters.length == _weights.length, "Voters and weights length mismatch");
         require(_voters.length > 0, "No voters provided");
         
         for (uint256 i = 0; i < _voters.length; i++) {
             address voterAddr = _voters[i];
-            uint256 weight = _weights[i];
-            
-            require(weight > 0 && weight <= 10, "Weight must be between 1 and 10");
             require(!voterInfo[_electionId][voterAddr].registered, "Voter already registered");
             
             voterInfo[_electionId][voterAddr] = Voter({
                 registered: true,
                 voted: false,
-                weight: weight,
                 votedForCandidateId: 0,
                 votedAt: 0
             });
             
             registeredVotersList[_electionId].push(voterAddr);
             
-            emit VoterRegistered(_electionId, voterAddr, weight);
+            emit VoterRegistered(_electionId, voterAddr);
         }
     }
     
@@ -169,17 +157,14 @@ contract VoteChain {
         voter.votedAt = block.timestamp;
         voterHistory[_electionId][msg.sender] = true;
         
-        uint256 weight = voter.weight;
-        candidates[_electionId][_candidateId].voteCount += weight;
+        candidates[_electionId][_candidateId].voteCount += 1;
         election.totalVotes++;
-        election.totalWeightedVotes += weight;
         
         emit Voted(
             _electionId,
             msg.sender,
             _candidateId,
-            candidates[_electionId][_candidateId].name,
-            weight
+            candidates[_electionId][_candidateId].name
         );
     }
     
@@ -225,8 +210,7 @@ contract VoteChain {
         
         emit ElectionEnded(
             _electionId,
-            elections[_electionId].totalVotes,
-            elections[_electionId].totalWeightedVotes
+            elections[_electionId].totalVotes
         );
     }
     
@@ -241,25 +225,23 @@ contract VoteChain {
         bool isActive,
         bool isPaused,
         uint256 totalVotes,
-        uint256 totalWeightedVotes,
         uint256 candidateCount,
         uint256 registeredVoterCount
     ) {
         require(_electionId < electionCount, "Election does not exist");
         Election storage e = elections[_electionId];
-        return (
-            e.title,
-            e.description,
-            e.creator,
-            e.startTime,
-            e.endTime,
-            e.isActive,
-            e.isPaused,
-            e.totalVotes,
-            e.totalWeightedVotes,
-            candidates[_electionId].length,
-            registeredVotersList[_electionId].length
-        );
+
+        // Assign to named return variables to avoid "stack too deep" in some toolchains.
+        title = e.title;
+        description = e.description;
+        creator = e.creator;
+        startTime = e.startTime;
+        endTime = e.endTime;
+        isActive = e.isActive;
+        isPaused = e.isPaused;
+        totalVotes = e.totalVotes;
+        candidateCount = candidates[_electionId].length;
+        registeredVoterCount = registeredVotersList[_electionId].length;
     }
     
     function getAllCandidates(uint256 _electionId) external view returns (
@@ -295,35 +277,27 @@ contract VoteChain {
         return (c.name, c.description, c.voteCount);
     }
     
-    function getRegisteredVoters(uint256 _electionId) external view returns (
-        address[] memory voters,
-        uint256[] memory weights
-    ) {
+    function getRegisteredVoters(uint256 _electionId) external view returns (address[] memory voters) {
         require(_electionId < electionCount, "Election does not exist");
         uint256 len = registeredVotersList[_electionId].length;
         
         voters = new address[](len);
-        weights = new uint256[](len);
         
         for (uint256 i = 0; i < len; i++) {
             address voterAddr = registeredVotersList[_electionId][i];
             voters[i] = voterAddr;
-            weights[i] = voterInfo[_electionId][voterAddr].weight;
         }
-        
-        return (voters, weights);
     }
     
     function getVoterInfo(uint256 _electionId, address _voter) external view returns (
         bool registered,
         bool voted,
-        uint256 weight,
         uint256 votedForCandidateId,
         uint256 votedAt
     ) {
         require(_electionId < electionCount, "Election does not exist");
         Voter storage v = voterInfo[_electionId][_voter];
-        return (v.registered, v.voted, v.weight, v.votedForCandidateId, v.votedAt);
+        return (v.registered, v.voted, v.votedForCandidateId, v.votedAt);
     }
     
     function isVoterRegistered(uint256 _electionId, address _voter) external view returns (bool) {

@@ -151,7 +151,7 @@
         <div class="header">
             <div class="logo">
                 <h1><i class="fas fa-vote-yea"></i> VoteChain <span class="badge">ADVANCED</span></h1>
-                <p>Decentralized • Transparent • Weighted Voting</p>
+                <p>Decentralized • Transparent • One-Person-One-Vote</p>
             </div>
             <div class="wallet-status">
                 <div class="network-badge"><i class="fas fa-circle"></i><span id="networkStatus">Not Connected</span></div>
@@ -189,7 +189,7 @@
         <div id="registerPanel" class="register-panel" style="display: none;">
             <h2><i class="fas fa-user-check"></i> Register Voters</h2>
             <div class="form-group"><label>Election ID</label><input type="number" id="registerElectionId" class="form-control" placeholder="0, 1, 2..."></div>
-            <div class="form-group"><label>Voters (Address and Weight)</label><div id="votersContainer"><div class="voter-input-group"><input type="text" placeholder="Wallet Address (0x...)"><input type="number" placeholder="Weight (1-10)" value="1"></div></div>
+            <div class="form-group"><label>Voters (Wallet Addresses)</label><div id="votersContainer"><div class="voter-input-group"><input type="text" placeholder="Wallet Address (0x...)"></div></div>
             <button type="button" id="addVoterBtn" class="btn-secondary"><i class="fas fa-plus"></i> Add Voter</button></div>
             <button id="registerVotersBtn" class="btn-primary"><i class="fas fa-save"></i> Register Voters</button>
         </div>
@@ -215,16 +215,35 @@
 
     <script src="https://cdn.jsdelivr.net/npm/ethers@6.10.0/dist/ethers.umd.min.js"></script>
     <script>
-        // UPDATED CONTRACT ADDRESS
-        const CONTRACT_ADDRESS = "0x230c92eAFf052d656f245d99C42B39D696AC84d2";
+        // Contract deployed on Sepolia
+        const CONTRACT_ADDRESS = "0xf3bf8AeACd2e1C8439EA67F01044cb666134f840";
         
-        // UPDATED ABI
-        const CONTRACT_ABI = [{"inputs":[{"internalType":"string","name":"_title","type":"string"},{"internalType":"string","name":"_description","type":"string"},{"internalType":"uint256","name":"_durationInMinutes","type":"uint256"},{"internalType":"string[]","name":"_candidateNames","type":"string[]"},{"internalType":"string[]","name":"_candidateDescriptions","type":"string[]"}],"name":"createElection","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"electionId","type":"uint256"},{"indexed":false,"internalType":"string","name":"title","type":"string"},{"indexed":true,"internalType":"address","name":"creator","type":"address"},{"indexed":false,"internalType":"uint256","name":"startTime","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"endTime","type":"uint256"}],"name":"ElectionCreated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"electionId","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"totalVotes","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"totalWeightedVotes","type":"uint256"}],"name":"ElectionEnded","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"electionId","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"newEndTime","type":"uint256"}],"name":"ElectionExtended","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"electionId","type":"uint256"}],"name":"ElectionPaused","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"electionId","type":"uint256"}],"name":"ElectionUnpaused","type":"event"},{"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"}],"name":"endElection","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"},{"internalType":"uint256","name":"_extraMinutes","type":"uint256"}],"name":"extendElection","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"}],"name":"pauseElection","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"},{"internalType":"address[]","name":"_voters","type":"address[]"},{"internalType":"uint256[]","name":"_weights","type":"uint256[]"}],"name":"registerVoters","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"}],"name":"unpauseElection","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"},{"internalType":"uint256","name":"_candidateId","type":"uint256"}],"name":"vote","outputs":[],"stateMutability":"nonpayable","type":"function"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"electionId","type":"uint256"},{"indexed":true,"internalType":"address","name":"voter","type":"address"},{"indexed":false,"internalType":"uint256","name":"candidateId","type":"uint256"},{"indexed":false,"internalType":"string","name":"candidateName","type":"string"},{"indexed":false,"internalType":"uint256","name":"weight","type":"uint256"}],"name":"Voted","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"electionId","type":"uint256"},{"indexed":true,"internalType":"address","name":"voter","type":"address"},{"indexed":false,"internalType":"uint256","name":"weight","type":"uint256"}],"name":"VoterRegistered","type":"event"},{"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"},{"internalType":"address","name":"_voter","type":"address"}],"name":"checkHasVoted","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"electionCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"elections","outputs":[{"internalType":"string","name":"title","type":"string"},{"internalType":"string","name":"description","type":"string"},{"internalType":"address","name":"creator","type":"address"},{"internalType":"uint256","name":"startTime","type":"uint256"},{"internalType":"uint256","name":"endTime","type":"uint256"},{"internalType":"bool","name":"isActive","type":"bool"},{"internalType":"bool","name":"isPaused","type":"bool"},{"internalType":"uint256","name":"totalVotes","type":"uint256"},{"internalType":"uint256","name":"totalWeightedVotes","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"}],"name":"getAllCandidates","outputs":[{"internalType":"string[]","name":"names","type":"string[]"},{"internalType":"string[]","name":"descriptions","type":"string[]"},{"internalType":"uint256[]","name":"voteCounts","type":"uint256[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"},{"internalType":"uint256","name":"_candidateId","type":"uint256"}],"name":"getCandidate","outputs":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"description","type":"string"},{"internalType":"uint256","name":"voteCount","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"}],"name":"getElectionInfo","outputs":[{"internalType":"string","name":"title","type":"string"},{"internalType":"string","name":"description","type":"string"},{"internalType":"address","name":"creator","type":"address"},{"internalType":"uint256","name":"startTime","type":"uint256"},{"internalType":"uint256","name":"endTime","type":"uint256"},{"internalType":"bool","name":"isActive","type":"bool"},{"internalType":"bool","name":"isPaused","type":"bool"},{"internalType":"uint256","name":"totalVotes","type":"uint256"},{"internalType":"uint256","name":"totalWeightedVotes","type":"uint256"},{"internalType":"uint256","name":"candidateCount","type":"uint256"},{"internalType":"uint256","name":"registeredVoterCount","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"}],"name":"getElectionWinner","outputs":[{"internalType":"uint256","name":"candidateId","type":"uint256"},{"internalType":"string","name":"name","type":"string"},{"internalType":"uint256","name":"voteCount","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"}],"name":"getRegisteredVoters","outputs":[{"internalType":"address[]","name":"voters","type":"address[]"},{"internalType":"uint256[]","name":"weights","type":"uint256[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"},{"internalType":"address","name":"_voter","type":"address"}],"name":"getVoterInfo","outputs":[{"internalType":"bool","name":"registered","type":"bool"},{"internalType":"bool","name":"voted","type":"bool"},{"internalType":"uint256","name":"weight","type":"uint256"},{"internalType":"uint256","name":"votedForCandidateId","type":"uint256"},{"internalType":"uint256","name":"votedAt","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"},{"internalType":"address","name":"_voter","type":"address"}],"name":"isVoterRegistered","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"address","name":"","type":"address"}],"name":"voterHistory","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"}];
+        // Contract ABI (one-person-one-vote, no weights)
+        const CONTRACT_ABI = [{"inputs":[{"internalType":"string","name":"_title","type":"string"},{"internalType":"string","name":"_description","type":"string"},{"internalType":"uint256","name":"_durationInMinutes","type":"uint256"},{"internalType":"string[]","name":"_candidateNames","type":"string[]"},{"internalType":"string[]","name":"_candidateDescriptions","type":"string[]"}],"name":"createElection","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"electionId","type":"uint256"},{"indexed":false,"internalType":"string","name":"title","type":"string"},{"indexed":true,"internalType":"address","name":"creator","type":"address"},{"indexed":false,"internalType":"uint256","name":"startTime","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"endTime","type":"uint256"}],"name":"ElectionCreated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"electionId","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"totalVotes","type":"uint256"}],"name":"ElectionEnded","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"electionId","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"newEndTime","type":"uint256"}],"name":"ElectionExtended","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"electionId","type":"uint256"}],"name":"ElectionPaused","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"electionId","type":"uint256"}],"name":"ElectionUnpaused","type":"event"},{"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"}],"name":"endElection","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"},{"internalType":"uint256","name":"_extraMinutes","type":"uint256"}],"name":"extendElection","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"}],"name":"pauseElection","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"},{"internalType":"address[]","name":"_voters","type":"address[]"}],"name":"registerVoters","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"}],"name":"unpauseElection","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"},{"internalType":"uint256","name":"_candidateId","type":"uint256"}],"name":"vote","outputs":[],"stateMutability":"nonpayable","type":"function"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"electionId","type":"uint256"},{"indexed":true,"internalType":"address","name":"voter","type":"address"},{"indexed":false,"internalType":"uint256","name":"candidateId","type":"uint256"},{"indexed":false,"internalType":"string","name":"candidateName","type":"string"}],"name":"Voted","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"electionId","type":"uint256"},{"indexed":true,"internalType":"address","name":"voter","type":"address"}],"name":"VoterRegistered","type":"event"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"uint256","name":"","type":"uint256"}],"name":"candidates","outputs":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"description","type":"string"},{"internalType":"uint256","name":"voteCount","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"},{"internalType":"address","name":"_voter","type":"address"}],"name":"checkHasVoted","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"electionCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"elections","outputs":[{"internalType":"string","name":"title","type":"string"},{"internalType":"string","name":"description","type":"string"},{"internalType":"address","name":"creator","type":"address"},{"internalType":"uint256","name":"startTime","type":"uint256"},{"internalType":"uint256","name":"endTime","type":"uint256"},{"internalType":"bool","name":"isActive","type":"bool"},{"internalType":"bool","name":"isPaused","type":"bool"},{"internalType":"uint256","name":"totalVotes","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"}],"name":"getAllCandidates","outputs":[{"internalType":"string[]","name":"names","type":"string[]"},{"internalType":"string[]","name":"descriptions","type":"string[]"},{"internalType":"uint256[]","name":"voteCounts","type":"uint256[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"},{"internalType":"uint256","name":"_candidateId","type":"uint256"}],"name":"getCandidate","outputs":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"description","type":"string"},{"internalType":"uint256","name":"voteCount","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"}],"name":"getElectionInfo","outputs":[{"internalType":"string","name":"title","type":"string"},{"internalType":"string","name":"description","type":"string"},{"internalType":"address","name":"creator","type":"address"},{"internalType":"uint256","name":"startTime","type":"uint256"},{"internalType":"uint256","name":"endTime","type":"uint256"},{"internalType":"bool","name":"isActive","type":"bool"},{"internalType":"bool","name":"isPaused","type":"bool"},{"internalType":"uint256","name":"totalVotes","type":"uint256"},{"internalType":"uint256","name":"candidateCount","type":"uint256"},{"internalType":"uint256","name":"registeredVoterCount","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"}],"name":"getElectionWinner","outputs":[{"internalType":"uint256","name":"candidateId","type":"uint256"},{"internalType":"string","name":"name","type":"string"},{"internalType":"uint256","name":"voteCount","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"}],"name":"getRegisteredVoters","outputs":[{"internalType":"address[]","name":"voters","type":"address[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"},{"internalType":"address","name":"_voter","type":"address"}],"name":"getVoterInfo","outputs":[{"internalType":"bool","name":"registered","type":"bool"},{"internalType":"bool","name":"voted","type":"bool"},{"internalType":"uint256","name":"votedForCandidateId","type":"uint256"},{"internalType":"uint256","name":"votedAt","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_electionId","type":"uint256"},{"internalType":"address","name":"_voter","type":"address"}],"name":"isVoterRegistered","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"uint256","name":"","type":"uint256"}],"name":"registeredVotersList","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"address","name":"","type":"address"}],"name":"voterHistory","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"address","name":"","type":"address"}],"name":"voterInfo","outputs":[{"internalType":"bool","name":"registered","type":"bool"},{"internalType":"bool","name":"voted","type":"bool"},{"internalType":"uint256","name":"votedForCandidateId","type":"uint256"},{"internalType":"uint256","name":"votedAt","type":"uint256"}],"stateMutability":"view","type":"function"}];
         
         let provider, signer, contract, userAddress;
         let electionsData = [], currentTab = 'active', pendingVote = null;
+        let chainNow = null; // latest block timestamp (seconds)
         
         function showToast(msg, type) { let t = document.createElement('div'); t.className = `toast ${type}`; t.innerHTML = `<i class="fas ${type==='success'?'fa-check-circle':type==='error'?'fa-exclamation-circle':'fa-info-circle'}"></i><span>${msg}</span>`; document.getElementById('toastContainer').appendChild(t); setTimeout(()=>t.remove(),5000); }
+
+        function getReadableError(e) {
+            if (!e) return 'Unknown error';
+            if (typeof e === 'string') return e;
+            if (e.shortMessage) return e.shortMessage;
+            if (e.reason) return e.reason;
+            if (e.info && e.info.error && e.info.error.message) return e.info.error.message;
+            if (e.data && typeof e.data.message === 'string') return e.data.message;
+            if (e.message) return e.message;
+            try { return JSON.stringify(e); } catch { return 'Unknown error'; }
+        }
+
+        async function refreshChainNow() {
+            if (!provider) return null;
+            const block = await provider.getBlock('latest');
+            chainNow = Number(block.timestamp);
+            return chainNow;
+        }
         
         document.getElementById('connectWalletBtn').onclick = async () => {
             if (!window.ethereum) { showToast('Install MetaMask!', 'error'); window.open('https://metamask.io/download.html'); return; }
@@ -235,42 +254,65 @@
                 userAddress = await signer.getAddress();
                 let network = await provider.getNetwork();
                 if (Number(network.chainId) !== 11155111) { showToast('Switch to Sepolia', 'error'); try { await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0xaa36a7' }] }); } catch(e){} return; }
+
+                // Verify the address actually has contract bytecode on Sepolia
+                const code = await provider.getCode(CONTRACT_ADDRESS);
+                if (!code || code === '0x') {
+                    showToast('No contract found at this address on Sepolia. Check CONTRACT_ADDRESS / network.', 'error');
+                    return;
+                }
+
                 contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
                 document.getElementById('networkStatus').innerHTML = '<i class="fas fa-check-circle"></i> Sepolia';
                 document.querySelector('.connect-btn span').textContent = `${userAddress.slice(0,6)}...${userAddress.slice(-4)}`;
                 document.getElementById('statsGrid').style.display = 'grid';
                 document.getElementById('tabs').style.display = 'flex';
-                let owner = await contract.owner();
+                let owner;
+                try {
+                    owner = await contract.owner();
+                } catch (e) {
+                    showToast('Contract ABI/address mismatch (owner() failed): ' + getReadableError(e), 'error');
+                    return;
+                }
                 let isAdmin = userAddress.toLowerCase() === owner.toLowerCase();
                 if (isAdmin) { document.getElementById('adminStatus').innerHTML = 'Admin'; document.getElementById('adminTabBtn').style.display = 'flex'; document.getElementById('registerTabBtn').style.display = 'flex'; document.getElementById('controlsTabBtn').style.display = 'flex'; showToast('Admin access granted!', 'success'); }
                 else { document.getElementById('adminStatus').innerHTML = 'Voter'; showToast('Welcome! You can vote.', 'info'); }
                 await loadAllData();
-            } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+            } catch(e) { showToast('Failed: ' + getReadableError(e), 'error'); }
         };
         
         async function loadAllData() {
             try {
+                await refreshChainNow();
                 let count = await contract.electionCount();
                 document.getElementById('totalElections').textContent = count.toString();
                 electionsData = []; let activeCount = 0, totalVotes = 0;
                 for (let i = 0; i < count; i++) {
                     let info = await contract.getElectionInfo(i);
                     let candidates = await contract.getAllCandidates(i);
-                    let election = { id: i, title: info[0], description: info[1], creator: info[2], startTime: Number(info[3]), endTime: Number(info[4]), isActive: info[5], isPaused: info[6], totalVotes: Number(info[7]), totalWeightedVotes: Number(info[8]), candidateCount: Number(info[9]), registeredVoterCount: Number(info[10]), candidates: [] };
-                    if (election.isActive && !election.isPaused) activeCount++;
-                    totalVotes += election.totalWeightedVotes;
+                    let election = { id: i, title: info[0], description: info[1], creator: info[2], startTime: Number(info[3]), endTime: Number(info[4]), isActive: info[5], isPaused: info[6], totalVotes: Number(info[7]), candidateCount: Number(info[8]), registeredVoterCount: Number(info[9]), candidates: [] };
+                    const now = chainNow ?? Math.floor(Date.now()/1000);
+                    const isEndedByTime = now > election.endTime;
+                    const isActiveNow = election.isActive && !election.isPaused && !isEndedByTime;
+                    if (isActiveNow) activeCount++;
+                    totalVotes += election.totalVotes;
                     for (let j = 0; j < candidates[0].length; j++) { election.candidates.push({ id: j, name: candidates[0][j], description: candidates[1][j], voteCount: Number(candidates[2][j]) }); }
                     electionsData.push(election);
                 }
                 document.getElementById('activeElections').textContent = activeCount;
                 document.getElementById('totalVotes').textContent = totalVotes;
                 renderElections();
-            } catch(e) { showToast('Error loading data', 'error'); }
+            } catch(e) { showToast('Error loading data: ' + getReadableError(e), 'error'); }
         }
         
         async function renderElections() {
             let container = document.getElementById('electionsContainer');
-            let filtered = electionsData.filter(e => currentTab === 'active' ? (e.isActive && !e.isPaused) : (!e.isActive));
+            const now = chainNow ?? Math.floor(Date.now()/1000);
+            let filtered = electionsData.filter(e => {
+                const isEndedByTime = now > e.endTime;
+                const isActiveNow = e.isActive && !e.isPaused && !isEndedByTime;
+                return currentTab === 'active' ? isActiveNow : !isActiveNow;
+            });
             if (filtered.length === 0) { container.innerHTML = `<div style="text-align:center;padding:60px;background:white;border-radius:24px"><i class="fas fa-inbox" style="font-size:64px;color:var(--gray)"></i><h3>No ${currentTab} elections</h3></div>`; return; }
             container.innerHTML = `<div class="elections-grid"></div>`;
             let grid = container.querySelector('.elections-grid');
@@ -278,26 +320,109 @@
                 let hasVoted = await contract.checkHasVoted(e.id, userAddress).catch(()=>false);
                 let isRegistered = await contract.isVoterRegistered(e.id, userAddress).catch(()=>false);
                 let totalVotes = e.candidates.reduce((s,c)=>s+c.voteCount,0);
+                const isEndedByTime = now > e.endTime;
+                const isActiveNow = e.isActive && !e.isPaused && !isEndedByTime;
                 let card = document.createElement('div'); card.className = 'election-card';
-                card.innerHTML = `<div class="card-header"><h3>${escapeHtml(e.title)}</h3><span class="status-badge ${e.isActive ? (e.isPaused ? 'status-paused' : 'status-active') : 'status-ended'}">${e.isActive ? (e.isPaused ? '⏸ PAUSED' : '● ACTIVE') : '■ ENDED'}</span></div><div class="card-body"><div class="election-meta"><span><i class="far fa-calendar-alt"></i> Ends: ${new Date(e.endTime*1000).toLocaleString()}</span><span><i class="fas fa-users"></i> ${e.candidateCount} Candidates</span><span><i class="fas fa-chart-line"></i> ${totalVotes} Votes</span><span><i class="fas fa-user-check"></i> ${e.registeredVoterCount} Registered</span></div><div class="candidates-list">${e.candidates.map(c => `<div class="candidate-item"><div class="candidate-info"><div class="candidate-avatar">${c.name.charAt(0)}</div><div class="candidate-details"><div class="candidate-name">${escapeHtml(c.name)}</div><div class="candidate-desc">${escapeHtml(c.description)}</div></div><div class="vote-count">${c.voteCount} votes</div></div>${e.isActive && !e.isPaused && !hasVoted && isRegistered ? `<button class="vote-btn" onclick="promptVote(${e.id}, ${c.id}, '${escapeHtml(c.name)}')">Vote</button>` : (hasVoted ? '<span class="voted-badge"><i class="fas fa-check"></i> Voted</span>' : (!isRegistered ? '<span class="voted-badge" style="background:#FEF3C7;color:#F59E0B;"><i class="fas fa-user-slash"></i> Not Registered</span>' : ''))}</div><div class="progress-bar"><div class="progress-fill" style="width: ${totalVotes>0 ? (c.voteCount/totalVotes*100) : 0}%"></div></div>`).join('')}</div>${!e.isActive ? `<div style="margin-top:15px;padding:10px;background:#F3F4F6;border-radius:12px"><strong><i class="fas fa-trophy" style="color:#FFD966"></i> Winner: </strong>${(()=>{let w=e.candidates.reduce((a,b)=>a.voteCount>b.voteCount?a:b,{name:'No votes',voteCount:0}); return `${w.name} (${w.voteCount} votes)`})()}</div>` : ''}</div>`;
+                card.innerHTML = `<div class="card-header"><h3>${escapeHtml(e.title)}</h3><span class="status-badge ${isActiveNow ? 'status-active' : (e.isPaused && !isEndedByTime ? 'status-paused' : 'status-ended')}">${isActiveNow ? '● ACTIVE' : (e.isPaused && !isEndedByTime ? '⏸ PAUSED' : '■ ENDED')}</span></div><div class="card-body"><div class="election-meta"><span><i class="far fa-calendar-alt"></i> Ends: ${new Date(e.endTime*1000).toLocaleString()}</span><span><i class="fas fa-users"></i> ${e.candidateCount} Candidates</span><span><i class="fas fa-chart-line"></i> ${totalVotes} Votes</span><span><i class="fas fa-user-check"></i> ${e.registeredVoterCount} Registered</span></div><div class="candidates-list">${e.candidates.map(c => `<div class="candidate-item"><div class="candidate-info"><div class="candidate-avatar">${c.name.charAt(0)}</div><div class="candidate-details"><div class="candidate-name">${escapeHtml(c.name)}</div><div class="candidate-desc">${escapeHtml(c.description)}</div></div><div class="vote-count">${c.voteCount} votes</div></div>${isActiveNow && !hasVoted && isRegistered ? `<button class="vote-btn" onclick="promptVote(${e.id}, ${c.id}, '${escapeHtml(c.name)}')">Vote</button>` : (hasVoted ? '<span class="voted-badge"><i class="fas fa-check"></i> Voted</span>' : (!isRegistered ? '<span class="voted-badge" style="background:#FEF3C7;color:#F59E0B;"><i class="fas fa-user-slash"></i> Not Registered</span>' : ''))}</div><div class="progress-bar"><div class="progress-fill" style="width: ${totalVotes>0 ? (c.voteCount/totalVotes*100) : 0}%"></div></div>`).join('')}</div>${!isActiveNow ? `<div style="margin-top:15px;padding:10px;background:#F3F4F6;border-radius:12px"><strong><i class="fas fa-trophy" style="color:#FFD966"></i> Winner: </strong>${(()=>{let w=e.candidates.reduce((a,b)=>a.voteCount>b.voteCount?a:b,{name:'No votes',voteCount:0}); return `${w.name} (${w.voteCount} votes)`})()}</div>` : ''}</div>`;
                 grid.appendChild(card);
             }
         }
         
         window.promptVote = (id, cid, name) => { pendingVote = { id, cid }; document.getElementById('confirmMessage').innerHTML = `Vote for <strong>${name}</strong>?`; document.getElementById('confirmModal').classList.add('active'); };
-        document.getElementById('confirmVoteBtn').onclick = async () => { if(!pendingVote) return; document.getElementById('confirmModal').classList.remove('active'); try { showToast('Casting vote...','info'); let tx = await contract.vote(pendingVote.id, pendingVote.cid); await tx.wait(); showToast('Vote cast!','success'); await loadAllData(); pendingVote = null; } catch(e){ showToast('Failed: '+e.message,'error'); } };
+        document.getElementById('confirmVoteBtn').onclick = async () => {
+            if(!pendingVote) return;
+            document.getElementById('confirmModal').classList.remove('active');
+            try {
+                showToast('Preparing transaction...','info');
+                await contract.vote.staticCall(pendingVote.id, pendingVote.cid);
+                showToast('Confirm in MetaMask...','info');
+                let tx = await contract.vote(pendingVote.id, pendingVote.cid);
+                await tx.wait();
+                showToast('Vote cast!','success');
+                await loadAllData();
+                pendingVote = null;
+            } catch(e){
+                showToast('Failed: '+getReadableError(e),'error');
+            }
+        };
         document.getElementById('cancelVoteBtn').onclick = () => { document.getElementById('confirmModal').classList.remove('active'); pendingVote = null; };
         
         document.getElementById('addCandidateBtn').onclick = () => { let d = document.getElementById('candidatesContainer'); let div = document.createElement('div'); div.className = 'candidate-input-group'; div.innerHTML = '<input type="text" placeholder="Candidate Name"><input type="text" placeholder="Description / Party">'; d.appendChild(div); };
-        document.getElementById('createElectionBtn').onclick = async () => { let title = document.getElementById('electionTitle').value; let desc = document.getElementById('electionDesc').value; let duration = parseInt(document.getElementById('durationMinutes').value); let inputs = document.querySelectorAll('.candidate-input-group'); let names = [], descs = []; inputs.forEach(i => { let n = i.children[0].value; let d = i.children[1].value; if(n.trim()){ names.push(n); descs.push(d); } }); if(!title || names.length<2){ showToast('Title and at least 2 candidates required','error'); return; } try { let btn = document.getElementById('createElectionBtn'); btn.innerHTML = '<div class="loading-spinner"></div> Creating...'; btn.disabled = true; let tx = await contract.createElection(title, desc, duration, names, descs); await tx.wait(); showToast(`Election "${title}" created!`,'success'); document.getElementById('electionTitle').value = ''; document.getElementById('electionDesc').value = ''; document.getElementById('candidatesContainer').innerHTML = '<div class="candidate-input-group"><input type="text" placeholder="Candidate Name"><input type="text" placeholder="Description / Party"></div>'; await loadAllData(); btn.innerHTML = '<i class="fas fa-rocket"></i> Create Election'; btn.disabled = false; } catch(e){ showToast('Failed: '+e.message,'error'); document.getElementById('createElectionBtn').innerHTML = '<i class="fas fa-rocket"></i> Create Election'; document.getElementById('createElectionBtn').disabled = false; } };
+        document.getElementById('createElectionBtn').onclick = async () => {
+            let title = document.getElementById('electionTitle').value;
+            let desc = document.getElementById('electionDesc').value;
+            let duration = parseInt(document.getElementById('durationMinutes').value);
+            let inputs = document.querySelectorAll('.candidate-input-group');
+            let names = [], descs = [];
+            inputs.forEach(i => { let n = i.children[0].value; let d = i.children[1].value; if(n.trim()){ names.push(n); descs.push(d); } });
+            if(!title || names.length<2){ showToast('Title and at least 2 candidates required','error'); return; }
+            try {
+                let btn = document.getElementById('createElectionBtn');
+                btn.innerHTML = '<div class="loading-spinner"></div> Creating...';
+                btn.disabled = true;
+                showToast('Confirm in MetaMask...','info');
+                let tx = await contract.createElection(title, desc, duration, names, descs);
+                await tx.wait();
+                showToast(`Election "${title}" created!`,'success');
+                document.getElementById('electionTitle').value = '';
+                document.getElementById('electionDesc').value = '';
+                document.getElementById('candidatesContainer').innerHTML = '<div class="candidate-input-group"><input type="text" placeholder="Candidate Name"><input type="text" placeholder="Description / Party"></div>';
+                await loadAllData();
+                btn.innerHTML = '<i class="fas fa-rocket"></i> Create Election';
+                btn.disabled = false;
+            } catch(e){
+                showToast('Failed: '+getReadableError(e),'error');
+                document.getElementById('createElectionBtn').innerHTML = '<i class="fas fa-rocket"></i> Create Election';
+                document.getElementById('createElectionBtn').disabled = false;
+            }
+        };
         
-        document.getElementById('addVoterBtn').onclick = () => { let d = document.getElementById('votersContainer'); let div = document.createElement('div'); div.className = 'voter-input-group'; div.innerHTML = '<input type="text" placeholder="Wallet Address (0x...)"><input type="number" placeholder="Weight" value="1">'; d.appendChild(div); };
-        document.getElementById('registerVotersBtn').onclick = async () => { let eid = parseInt(document.getElementById('registerElectionId').value); let inputs = document.querySelectorAll('#votersContainer .voter-input-group'); let voters = [], weights = []; inputs.forEach(i => { let addr = i.children[0].value; let w = parseInt(i.children[1].value); if(addr && addr.startsWith('0x')){ voters.push(addr); weights.push(w); } }); if(isNaN(eid) || voters.length===0){ showToast('Enter election ID and at least one voter','error'); return; } try { let btn = document.getElementById('registerVotersBtn'); btn.innerHTML = '<div class="loading-spinner"></div> Registering...'; btn.disabled = true; let tx = await contract.registerVoters(eid, voters, weights); await tx.wait(); showToast(`${voters.length} voters registered!`,'success'); await loadAllData(); btn.innerHTML = '<i class="fas fa-save"></i> Register Voters'; btn.disabled = false; } catch(e){ showToast('Failed: '+e.message,'error'); btn.innerHTML = '<i class="fas fa-save"></i> Register Voters'; btn.disabled = false; } };
+        document.getElementById('addVoterBtn').onclick = () => {
+            let d = document.getElementById('votersContainer');
+            let div = document.createElement('div');
+            div.className = 'voter-input-group';
+            div.innerHTML = '<input type="text" placeholder="Wallet Address (0x...)">';
+            d.appendChild(div);
+        };
+        document.getElementById('registerVotersBtn').onclick = async () => {
+            let eid = parseInt(document.getElementById('registerElectionId').value);
+            let inputs = document.querySelectorAll('#votersContainer .voter-input-group');
+            let voters = [];
+            inputs.forEach(i => {
+                let addr = (i.children[0].value || '').trim();
+                if (addr && ethers.isAddress(addr)) {
+                    voters.push(addr);
+                }
+            });
+            if(isNaN(eid) || voters.length===0){
+                showToast('Enter election ID and at least one valid voter address','error');
+                return;
+            }
+            try {
+                let btn = document.getElementById('registerVotersBtn');
+                btn.innerHTML = '<div class="loading-spinner"></div> Registering...';
+                btn.disabled = true;
+                showToast('Checking transaction...','info');
+                await contract.registerVoters.staticCall(eid, voters);
+                showToast('Confirm in MetaMask...','info');
+                let tx = await contract.registerVoters(eid, voters);
+                await tx.wait();
+                showToast(`${voters.length} voters registered!`,'success');
+                await loadAllData();
+                btn.innerHTML = '<i class="fas fa-save"></i> Register Voters';
+                btn.disabled = false;
+            } catch(e){
+                showToast('Failed: '+getReadableError(e),'error');
+                let btn = document.getElementById('registerVotersBtn');
+                btn.innerHTML = '<i class="fas fa-save"></i> Register Voters';
+                btn.disabled = false;
+            }
+        };
         
-        document.getElementById('pauseElectionBtn').onclick = async () => { let eid = parseInt(document.getElementById('controlElectionId').value); if(isNaN(eid)){ showToast('Enter election ID','error'); return; } try { let tx = await contract.pauseElection(eid); await tx.wait(); showToast('Election paused','success'); await loadAllData(); } catch(e){ showToast('Failed: '+e.message,'error'); } };
-        document.getElementById('unpauseElectionBtn').onclick = async () => { let eid = parseInt(document.getElementById('controlElectionId').value); if(isNaN(eid)){ showToast('Enter election ID','error'); return; } try { let tx = await contract.unpauseElection(eid); await tx.wait(); showToast('Election unpaused','success'); await loadAllData(); } catch(e){ showToast('Failed: '+e.message,'error'); } };
-        document.getElementById('endElectionBtn').onclick = async () => { let eid = parseInt(document.getElementById('controlElectionId').value); if(isNaN(eid)){ showToast('Enter election ID','error'); return; } try { let tx = await contract.endElection(eid); await tx.wait(); showToast('Election ended','success'); await loadAllData(); } catch(e){ showToast('Failed: '+e.message,'error'); } };
-        document.getElementById('extendElectionBtn').onclick = async () => { let eid = parseInt(document.getElementById('controlElectionId').value); let mins = parseInt(document.getElementById('extendMinutes').value); if(isNaN(eid) || isNaN(mins)){ showToast('Enter election ID and minutes','error'); return; } try { let tx = await contract.extendElection(eid, mins); await tx.wait(); showToast(`Election extended by ${mins} minutes`,'success'); await loadAllData(); } catch(e){ showToast('Failed: '+e.message,'error'); } };
+        document.getElementById('pauseElectionBtn').onclick = async () => { let eid = parseInt(document.getElementById('controlElectionId').value); if(isNaN(eid)){ showToast('Enter election ID','error'); return; } try { showToast('Confirm in MetaMask...','info'); let tx = await contract.pauseElection(eid); await tx.wait(); showToast('Election paused','success'); await loadAllData(); } catch(e){ showToast('Failed: '+getReadableError(e),'error'); } };
+        document.getElementById('unpauseElectionBtn').onclick = async () => { let eid = parseInt(document.getElementById('controlElectionId').value); if(isNaN(eid)){ showToast('Enter election ID','error'); return; } try { showToast('Confirm in MetaMask...','info'); let tx = await contract.unpauseElection(eid); await tx.wait(); showToast('Election unpaused','success'); await loadAllData(); } catch(e){ showToast('Failed: '+getReadableError(e),'error'); } };
+        document.getElementById('endElectionBtn').onclick = async () => { let eid = parseInt(document.getElementById('controlElectionId').value); if(isNaN(eid)){ showToast('Enter election ID','error'); return; } try { showToast('Confirm in MetaMask...','info'); let tx = await contract.endElection(eid); await tx.wait(); showToast('Election ended','success'); await loadAllData(); } catch(e){ showToast('Failed: '+getReadableError(e),'error'); } };
+        document.getElementById('extendElectionBtn').onclick = async () => { let eid = parseInt(document.getElementById('controlElectionId').value); let mins = parseInt(document.getElementById('extendMinutes').value); if(isNaN(eid) || isNaN(mins)){ showToast('Enter election ID and minutes','error'); return; } try { showToast('Confirm in MetaMask...','info'); let tx = await contract.extendElection(eid, mins); await tx.wait(); showToast(`Election extended by ${mins} minutes`,'success'); await loadAllData(); } catch(e){ showToast('Failed: '+getReadableError(e),'error'); } };
         
         document.querySelectorAll('.tab-btn').forEach(btn => { btn.onclick = () => { document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); currentTab = btn.dataset.tab; document.getElementById('adminPanel').style.display = 'none'; document.getElementById('registerPanel').style.display = 'none'; document.getElementById('controlsPanel').style.display = 'none'; document.getElementById('electionsContainer').style.display = 'block'; if(currentTab === 'admin'){ document.getElementById('adminPanel').style.display = 'block'; document.getElementById('electionsContainer').style.display = 'none'; } else if(currentTab === 'register'){ document.getElementById('registerPanel').style.display = 'block'; document.getElementById('electionsContainer').style.display = 'none'; } else if(currentTab === 'controls'){ document.getElementById('controlsPanel').style.display = 'block'; document.getElementById('electionsContainer').style.display = 'none'; } else { renderElections(); } }; });
         
